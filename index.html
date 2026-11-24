@@ -259,7 +259,7 @@
 <script>
 (function () {
   'use strict';
-  var VERSION = 'v3';
+  var VERSION = 'v4';
   function $(id) { return document.getElementById(id); }
   function show(el, on) { (typeof el === 'string' ? $(el) : el).classList[on === false ? 'add' : 'remove']('hidden'); }
   function hide(el) { show(el, false); }
@@ -815,7 +815,9 @@
   // ---------- Envio: Strava ----------
   function stravaToken() {
     if (cfg.sat && cfg.sexp && cfg.sexp * 1000 > Date.now() + 120000) return Promise.resolve(cfg.sat);
-    if (!cfg.sid || !cfg.ssec || !cfg.srt) return Promise.reject(new Error('Strava não conectado'));
+    var miss = [];
+    if (!cfg.sid) miss.push('Client ID'); if (!cfg.ssec) miss.push('Client Secret'); if (!cfg.srt) miss.push('código de acesso (Conectar ao Strava)');
+    if (miss.length) return Promise.reject(new Error('falta ' + miss.join(', ')));
     return fetch('https://www.strava.com/oauth/token', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ client_id: cfg.sid, client_secret: cfg.ssec, grant_type: 'refresh_token', refresh_token: cfg.srt })
@@ -939,7 +941,9 @@
   // ---------- Ajustes ----------
   function renderCfg() {
     $('iKey').value = cfg.ikey || ''; $('sId').value = cfg.sid || ''; $('sSec').value = cfg.ssec || ''; $('sRt').value = '';
-    $('sState').innerHTML = cfg.srt ? '<span class="ok">Conectado ao Strava ✓</span>' : '<span class="dim">Não conectado.</span>';
+    // Só diz "conectado" depois de um teste que deu certo; ter um código salvo não basta.
+    $('sState').innerHTML = cfg.sok && cfg.srt ? '<span class="ok">Conectado ao Strava ✓</span>' :
+      (cfg.srt ? '<span class="warn">Código salvo, ainda não testado. Toque em Testar.</span>' : '<span class="dim">Não conectado.</span>');
     $('sRtShow').innerHTML = cfg.srt ? 'Código de acesso (para copiar para outro aparelho):<br><span class="mono">' + esc(cfg.srt) + '</span>' : '';
     $('ver').textContent = 'Pedal ' + VERSION + (DEMO ? ' · DEMO' : '') + ' · ' + navigator.userAgent;
   }
@@ -948,7 +952,7 @@
   function readCfgForm() {
     reloadCfg(); // não apaga uma conexão do Strava feita noutra aba
     cfg.ikey = $('iKey').value.trim(); cfg.sid = $('sId').value.trim(); cfg.ssec = $('sSec').value.trim();
-    var rt = $('sRt').value.trim(); if (rt) { cfg.srt = rt; cfg.sat = ''; cfg.sexp = 0; }
+    var rt = $('sRt').value.trim(); if (rt) { cfg.srt = rt; cfg.sat = ''; cfg.sexp = 0; cfg.sok = false; }
     saveCfg();
   }
   $('btnSave').onclick = function () {
@@ -968,8 +972,8 @@
     stravaToken()
       .then(function (tok) { return fetch('https://www.strava.com/api/v3/athlete', { headers: { Authorization: 'Bearer ' + tok } }); })
       .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || ('HTTP ' + r.status)); return j; }); })
-      .then(function (a) { $('sState').innerHTML = '<span class="ok">Strava OK: ' + esc((a.firstname || '') + ' ' + (a.lastname || '')) + ' ✓</span>'; })
-      .catch(function (e) { $('sState').innerHTML = '<span class="bad">Strava falhou: ' + esc(e.message) + '</span>'; });
+      .then(function (a) { cfg.sok = true; saveCfg(); $('sState').innerHTML = '<span class="ok">Strava OK: ' + esc((a.firstname || '') + ' ' + (a.lastname || '')) + ' ✓</span>'; })
+      .catch(function (e) { cfg.sok = false; saveCfg(); $('sState').innerHTML = '<span class="bad">Strava falhou: ' + esc(e.message) + '</span>'; });
   };
   function redirectUri() { return location.origin + location.pathname; }
   $('btnStrava').onclick = function () {
@@ -991,7 +995,7 @@
       body: JSON.stringify({ client_id: cfg.sid, client_secret: cfg.ssec, code: decodeURIComponent(m[1]), grant_type: 'authorization_code' })
     }).then(function (r) { return r.json().then(function (j) {
       if (!r.ok || !j.refresh_token) throw new Error(j.message || ('HTTP ' + r.status));
-      cfg.srt = j.refresh_token; cfg.sat = j.access_token; cfg.sexp = j.expires_at; saveCfg(); renderCfg();
+      cfg.srt = j.refresh_token; cfg.sat = j.access_token; cfg.sexp = j.expires_at; cfg.sok = true; saveCfg(); renderCfg();
     }); }).catch(function (e) { $('sState').innerHTML = '<span class="bad">Falhou: ' + esc(e.message) + '</span>'; });
   }
 
@@ -1027,7 +1031,8 @@
       var b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
       var d = JSON.parse(decodeURIComponent(escape(atob(b))));
       ['ikey', 'sid', 'ssec', 'srt'].forEach(function (k) { if (d[k]) cfg[k] = d[k]; });
-      cfg.sat = ''; cfg.sexp = 0; saveCfg();
+      cfg.sat = ''; cfg.sexp = 0; cfg.sok = false; saveCfg();
+      if (d.srt && navigator.onLine) setTimeout(function () { $('btnSTest').click(); }, 300);
       history.replaceState(null, '', redirectUri());
       hide('home'); show('cfg'); renderCfg();
       $('cfgMsg').innerHTML = '<span class="ok">Ajustes recebidos ✓ ' + (d.ikey ? 'Intervals ' : '') + (d.srt ? 'Strava' : '') + '</span>';
