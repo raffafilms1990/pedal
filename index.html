@@ -149,9 +149,17 @@
     <label>Client Secret</label>
     <input id="sSec" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
     <button id="btnStrava">Conectar ao Strava</button>
+    <button class="sec" id="btnSTest">Testar conexão com o Strava</button>
     <label>Ou cole o código de acesso (refresh token)</label>
     <input id="sRt" autocomplete="off" autocapitalize="off" spellcheck="false">
     <div class="tip" id="sRtShow"></div>
+  </div>
+
+  <div class="card">
+    <h2>Passar ajustes para o iPhone</h2>
+    <div class="tip">Faça a conexão com o Strava e a chave do Intervals aqui no computador. Depois aponte a câmera do iPhone para o QR code.</div>
+    <button class="sec" id="btnQr">Mostrar QR code</button>
+    <div id="qrBox" style="text-align:center;margin-top:10px"></div>
   </div>
 
   <div class="card">
@@ -233,12 +241,25 @@
   </div>
 </div>
 
+<!-- ===================== IMPORTAR (aberto pelo QR no Safari) ===================== -->
+<div id="imp" class="view hidden">
+  <div class="hdr"><h1>QUASE LÁ</h1></div>
+  <div class="card">
+    <h2>Agora abra este link no Bluefy</h2>
+    <div class="tip">O Safari não fala com a cinta. Os ajustes precisam entrar no Bluefy:</div>
+    <div class="tip"><b>1.</b> Toque em <b>Copiar link</b>.<br><b>2.</b> Abra o <b>Bluefy</b>.<br><b>3.</b> Toque na barra de endereço, cole e abra.</div>
+    <button id="btnCopy">Copiar link</button>
+    <div class="msg" id="copyMsg"></div>
+    <input id="impLink" readonly style="font-size:12px;margin-top:12px">
+  </div>
+</div>
+
 <div class="toast hidden" id="toast"></div>
 
 <script>
 (function () {
   'use strict';
-  var VERSION = 'v1';
+  var VERSION = 'v3';
   function $(id) { return document.getElementById(id); }
   function show(el, on) { (typeof el === 'string' ? $(el) : el).classList[on === false ? 'add' : 'remove']('hidden'); }
   function hide(el) { show(el, false); }
@@ -267,6 +288,10 @@
   function jdel(k) { LS.removeItem(P + k); }
   var cfg = jget('cfg', {});
   function saveCfg() { jset('cfg', cfg); }
+  // Relê os ajustes salvos: se o login do Strava voltou noutra aba/janela do Bluefy,
+  // a cópia em memória desta aba ficava velha ("Strava não conectado").
+  function reloadCfg() { cfg = jget('cfg', {}); }
+  window.addEventListener('storage', function () { reloadCfg(); if (!$('home').classList.contains('hidden')) renderRides(); });
 
   // ---------- Zonas de FC (vêm do Intervals; padrão = bike atual) ----------
   var ZCOL = ['#b4b6bd', '#1e9bff', '#22d64e', '#ffe11a', '#ff8a00', '#ff1a55', '#a21cff'];
@@ -826,6 +851,7 @@
 
   var uploading = false;
   function uploadRide(id) {
+    reloadCfg();
     var r = loadRide(id);
     if (!r || !r.S.length) return Promise.resolve();
     var tcx = buildTcx(r), errs = [];
@@ -838,6 +864,7 @@
   // ---------- Sincronizar ----------
   function sync() {
     if (uploading) return;
+    reloadCfg();
     var msg = $('syncMsg'), lines = [];
     function say(t) { lines.push(t); msg.textContent = lines.join('\n'); }
     if (DEMO) { say('Modo demonstração: nada é enviado.'); return; }
@@ -881,9 +908,18 @@
       html += '<div class="ride-item"><b>' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' · ' + esc(m.name) + '</b><br>' +
         fmt(m.dist / 1000, 1) + ' km · ' + hms(m.moving) + '<br>' + st +
         (m.up.err ? '<div class="bad" style="font-size:13px">' + esc(m.up.err) + '</div>' : '') +
-        '<div style="margin-top:6px"><button class="sm sec" style="margin:0" data-del="' + id + '">Apagar</button></div></div>';
+        '<div style="margin-top:6px">' +
+        ((!m.up.i && cfg.ikey) || (!m.up.s && cfg.srt) ? '<button class="sm" style="margin:0 8px 0 0" data-send="' + id + '">Enviar agora</button>' : '') +
+        '<button class="sm sec" style="margin:0" data-del="' + id + '">Apagar</button></div></div>';
     });
     $('rideList').innerHTML = html || '<div class="tip">Nenhum pedal gravado ainda.</div>';
+    var sb = $('rideList').querySelectorAll('[data-send]');
+    for (var j = 0; j < sb.length; j++) sb[j].onclick = function () {
+      var btn = this; btn.textContent = 'Enviando…'; btn.disabled = true;
+      uploadRide(btn.getAttribute('data-send')).then(function (errs) {
+        toast(errs && errs.length ? 'Falhou: ' + errs.join(' / ') : 'Pedal enviado ✓', 6);
+      });
+    };
     var b = $('rideList').querySelectorAll('[data-del]');
     for (var i = 0; i < b.length; i++) b[i].onclick = function () {
       var id = this.getAttribute('data-del'), m = jget('r.' + id, null);
@@ -898,7 +934,7 @@
     } else hide('resumeCard');
   }
 
-  function goHome() { hide('ride'); hide('cfg'); show('home'); renderWorkouts(); renderRides(); }
+  function goHome() { reloadCfg(); hide('ride'); hide('cfg'); show('home'); renderWorkouts(); renderRides(); }
 
   // ---------- Ajustes ----------
   function renderCfg() {
@@ -907,9 +943,10 @@
     $('sRtShow').innerHTML = cfg.srt ? 'Código de acesso (para copiar para outro aparelho):<br><span class="mono">' + esc(cfg.srt) + '</span>' : '';
     $('ver').textContent = 'Pedal ' + VERSION + (DEMO ? ' · DEMO' : '') + ' · ' + navigator.userAgent;
   }
-  $('btnCfg').onclick = function () { hide('home'); show('cfg'); renderCfg(); };
+  $('btnCfg').onclick = function () { reloadCfg(); hide('home'); show('cfg'); renderCfg(); };
   $('btnCfgBack').onclick = goHome;
   function readCfgForm() {
+    reloadCfg(); // não apaga uma conexão do Strava feita noutra aba
     cfg.ikey = $('iKey').value.trim(); cfg.sid = $('sId').value.trim(); cfg.ssec = $('sSec').value.trim();
     var rt = $('sRt').value.trim(); if (rt) { cfg.srt = rt; cfg.sat = ''; cfg.sexp = 0; }
     saveCfg();
@@ -924,6 +961,15 @@
         .then(function (a) { $('iMsg').innerHTML = '<span class="ok">Chave OK: ' + esc(a.name || a.id) + '</span>'; })
         .catch(function (e) { $('iMsg').innerHTML = '<span class="bad">Chave não funcionou (' + e.message + ')</span>'; });
     }
+  };
+  $('btnSTest').onclick = function () {
+    reloadCfg();
+    $('sState').textContent = 'Testando…';
+    stravaToken()
+      .then(function (tok) { return fetch('https://www.strava.com/api/v3/athlete', { headers: { Authorization: 'Bearer ' + tok } }); })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || ('HTTP ' + r.status)); return j; }); })
+      .then(function (a) { $('sState').innerHTML = '<span class="ok">Strava OK: ' + esc((a.firstname || '') + ' ' + (a.lastname || '')) + ' ✓</span>'; })
+      .catch(function (e) { $('sState').innerHTML = '<span class="bad">Strava falhou: ' + esc(e.message) + '</span>'; });
   };
   function redirectUri() { return location.origin + location.pathname; }
   $('btnStrava').onclick = function () {
@@ -948,6 +994,56 @@
       cfg.srt = j.refresh_token; cfg.sat = j.access_token; cfg.sexp = j.expires_at; saveCfg(); renderCfg();
     }); }).catch(function (e) { $('sState').innerHTML = '<span class="bad">Falhou: ' + esc(e.message) + '</span>'; });
   }
+
+  // ---------- Passar ajustes por QR code (PC → câmera do iPhone → Safari → Bluefy) ----------
+  // Os ajustes vão depois do "#", que o navegador nunca envia ao servidor do GitHub.
+  function cfgLink() {
+    var data = JSON.stringify({ ikey: cfg.ikey || '', sid: cfg.sid || '', ssec: cfg.ssec || '', srt: cfg.srt || '' });
+    return redirectUri() + '#import=' + btoa(unescape(encodeURIComponent(data))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  $('btnQr').onclick = function () {
+    readCfgForm();
+    if (!cfg.ikey && !cfg.srt) { $('qrBox').innerHTML = '<span class="bad">Preencha a chave do Intervals e/ou conecte o Strava primeiro.</span>'; return; }
+    function draw() {
+      var q = qrcode(0, 'L'); q.addData(cfgLink()); q.make();
+      $('qrBox').innerHTML = '<div style="background:#fff;display:inline-block;padding:10px;border-radius:8px">' + q.createImgTag(5, 4) + '</div>' +
+        '<div class="tip">Câmera do iPhone → toque no aviso “Abrir no Safari”.<br>' +
+        (cfg.ikey ? '✓ Intervals ' : '✗ sem Intervals ') + (cfg.srt ? '✓ Strava' : '✗ sem Strava') +
+        '<br><b>Não compartilhe este QR:</b> ele dá acesso às suas contas.</div>';
+    }
+    if (window.qrcode) return draw();
+    var s = document.createElement('script'); s.src = 'qr.js';
+    s.onload = draw; s.onerror = function () { $('qrBox').textContent = 'Sem internet para gerar o QR.'; };
+    document.head.appendChild(s);
+  };
+  function handleImport() {
+    var m = /#import=([A-Za-z0-9_-]+)/.exec(location.hash);
+    if (!m) return false;
+    if (!navigator.bluetooth && !DEMO) { // Safari: só orienta a abrir no Bluefy
+      hide('home'); show('imp'); $('impLink').value = location.href;
+      return true;
+    }
+    try {
+      var b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+      var d = JSON.parse(decodeURIComponent(escape(atob(b))));
+      ['ikey', 'sid', 'ssec', 'srt'].forEach(function (k) { if (d[k]) cfg[k] = d[k]; });
+      cfg.sat = ''; cfg.sexp = 0; saveCfg();
+      history.replaceState(null, '', redirectUri());
+      hide('home'); show('cfg'); renderCfg();
+      $('cfgMsg').innerHTML = '<span class="ok">Ajustes recebidos ✓ ' + (d.ikey ? 'Intervals ' : '') + (d.srt ? 'Strava' : '') + '</span>';
+    } catch (e) { toast('Link de ajustes inválido: ' + e.message, 6); }
+    return true;
+  }
+  $('btnCopy').onclick = function () {
+    var el = $('impLink'), ok = false;
+    try {
+      el.removeAttribute('readonly'); el.focus();
+      el.setSelectionRange(0, el.value.length);
+      ok = document.execCommand('copy');
+      el.setAttribute('readonly', ''); el.blur();
+    } catch (e) {}
+    $('copyMsg').innerHTML = ok ? '<span class="ok">Copiado! Agora cole no Bluefy.</span>' : '<span class="warn">Não consegui copiar. Toque e segure no link abaixo → Selecionar Tudo → Copiar.</span>';
+  };
 
   // ---------- Botões da tela inicial ----------
   $('btnHr').onclick = connectHr;
@@ -983,8 +1079,9 @@
   if (DEMO) window.__pd = { buildTcx: buildTcx, loadRide: loadRide, rides: function () { return jget('rides', []); } };
   loadDem();
   startGps();
-  handleStravaReturn();
   goHome();
+  handleStravaReturn();
+  handleImport();
   if (!DEMO && !cfg.ikey) toast('Primeiro: Ajustes → chave do Intervals.', 5);
   setInterval(tick, 1000 / K);
   window.addEventListener('resize', function () { if (R) renderRide(true); });
