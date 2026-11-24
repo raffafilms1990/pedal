@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="pt-BR" manifest="pedal.appcache">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Pedal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: #1c1c1e; color: #fff; -webkit-user-select: none; user-select: none;
+    font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  .hidden { display: none !important; }
+  .ok { color: #3ddc84; } .bad { color: #ff5c6c; } .warn { color: #ffc24b; } .dim { color: #8a8a96; }
+
+  /* ---------- Telas de menu ---------- */
+  .view { position: absolute; left: 0; right: 0; top: 0; bottom: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 12px 40px; }
+  .hdr { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: center; -webkit-align-items: center; align-items: center; margin-bottom: 12px; }
+  .hdr h1 { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; font-size: 22px; font-weight: 800; letter-spacing: 1px; }
+  .hdr button { width: auto; margin: 0; padding: 8px 12px; font-size: 15px; }
+  .card { background: #2a2a2e; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #8a8a96; margin-bottom: 8px; font-weight: 700; }
+  .line { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: center; -webkit-align-items: center; align-items: center; padding: 4px 0; font-size: 16px; }
+  .line > span:first-child { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; background: #555; }
+  .dot.on { background: #3ddc84; } .dot.mid { background: #ffc24b; }
+  button { -webkit-appearance: none; appearance: none; border: 0; border-radius: 10px; background: #2f6bff; color: #fff; font-size: 17px; font-weight: 700; padding: 13px 14px; width: 100%; margin-top: 8px; font-family: inherit; }
+  button.sec { background: #3a3a42; } button.danger { background: #6a1f2b; } button.sm { width: auto; padding: 7px 12px; font-size: 14px; margin: 0 0 0 8px; }
+  button:active { opacity: .7; }
+  input { width: 100%; font-size: 16px; padding: 11px; border-radius: 8px; border: 1px solid #444; background: #151518; color: #fff; margin-top: 6px; font-family: inherit; -webkit-user-select: text; user-select: text; }
+  label { display: block; font-size: 13px; color: #8a8a96; margin-top: 10px; }
+  .wk { background: #34343a; border-radius: 10px; padding: 11px 12px; margin-top: 8px; }
+  .wk.today { background: #183a7a; }
+  .wk b { display: block; font-size: 17px; margin-top: 2px; }
+  .wk small { font-size: 13px; color: #b5b5c0; }
+  .wk .when { font-size: 12px; font-weight: 700; color: #9fb4ff; text-transform: uppercase; letter-spacing: .5px; }
+  .ride-item { border-top: 1px solid #3a3a42; padding: 10px 0; font-size: 15px; }
+  .ride-item:first-of-type { border-top: 0; }
+  .msg { font-size: 14px; margin-top: 8px; min-height: 18px; white-space: pre-line; }
+  .tip { font-size: 13px; color: #9a9aa6; line-height: 1.4; margin-top: 6px; }
+  .mono { font-family: Menlo, monospace; font-size: 13px; word-break: break-all; -webkit-user-select: text; user-select: text; }
+
+  /* ---------- Tela do pedal (layout aprovado) ---------- */
+  .screen { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: #1c1c1e; padding-bottom: 8px; overflow: hidden;
+    display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column; }
+  .blk { position: relative; padding: 0 10px; }
+  .sep { height: 2px; background: #1f2a6e; margin: 0 10px; -webkit-flex-shrink: 0; flex-shrink: 0; }
+  .lbl { font-size: 13px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; color: #e8e8ea; }
+  .num { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
+  .u { font-size: 11px; font-weight: 700; line-height: 1; display: inline-block; text-align: center; vertical-align: top; margin: 5px 0 0 2px; }
+  .top { -webkit-flex-shrink: 0; flex-shrink: 0; text-align: center; padding-top: 8px; }
+  .step { font-size: 17px; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 40px; }
+  .step .rep { color: #9a9aa5; font-weight: 600; margin-left: 4px; }
+  .remain { font-size: 50px; line-height: 1.05; }
+  .target { display: inline-block; margin-top: 2px; padding: 2px 10px; border-radius: 6px; font-size: 17px; font-weight: 700; color: #000; background: #d8d8dc; }
+  .target.alert { -webkit-animation: blink 1s infinite; animation: blink 1s infinite; }
+  @-webkit-keyframes blink { 50% { opacity: .35; } } @keyframes blink { 50% { opacity: .35; } }
+  .bar { position: relative; height: 15px; border: 2px solid #d8d8dc; border-radius: 3px; margin: 8px 0 6px; overflow: hidden; background: #2b2b30; }
+  .bar div { position: absolute; top: 0; bottom: 0; }
+  .bar i { position: absolute; top: 0; bottom: 0; width: 1px; background: #1c1c1e; }
+  .pair { display: -webkit-box; display: -webkit-flex; display: flex; padding-bottom: 6px; }
+  .pair > div { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; text-align: center; min-width: 0; }
+  .pair .v { font-size: 20px; font-weight: 700; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .graph { -webkit-box-flex: 1; -webkit-flex: 1 1 0; flex: 1 1 0; display: -webkit-box; display: -webkit-flex; display: flex;
+    -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column; padding-top: 4px; min-height: 0; }
+  .ghead { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: center; -webkit-align-items: center; align-items: center; height: 46px; -webkit-flex-shrink: 0; flex-shrink: 0; }
+  .ghead .ico { width: 30px; }
+  .ghead .big { font-size: 44px; width: 120px; }
+  .ghead .stats { font-size: 15px; font-weight: 700; line-height: 1.15; display: -webkit-box; display: -webkit-flex; display: flex; }
+  .ghead .stats div + div { margin-left: 22px; text-align: right; min-width: 40px; }
+  canvas { display: block; width: 100%; -webkit-box-flex: 1; -webkit-flex: 1 1 0; flex: 1 1 0; min-height: 0; }
+  .foot { -webkit-flex-shrink: 0; flex-shrink: 0; display: -webkit-box; display: -webkit-flex; display: flex; padding: 5px 0 6px; }
+  .foot > div { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; text-align: center; }
+  .foot > div + div { border-left: 2px solid #1f2a6e; }
+  .foot .v { font-size: 28px; }
+  .rec { position: absolute; top: 9px; right: 10px; width: 10px; height: 10px; border-radius: 50%; background: #ff2d55; }
+  .rec.paused { background: #ffc24b; }
+  .sens { position: absolute; top: 7px; left: 10px; font-size: 11px; font-weight: 700; color: #666; }
+  .sens .on { color: #3ddc84; } .sens .off { color: #ff5c6c; }
+
+  /* ---------- Sobreposições ---------- */
+  .ov { position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 10; background: rgba(0,0,0,.88); padding: 20px;
+    display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column;
+    -webkit-box-pack: center; -webkit-justify-content: center; justify-content: center; text-align: center; }
+  .ov h3 { font-size: 22px; margin-bottom: 6px; }
+  .ov p { font-size: 15px; color: #c0c0cc; line-height: 1.4; }
+  .alert-ov { z-index: 20; background: #2f6bff; }
+  .alert-ov .a1 { font-size: 20px; font-weight: 700; text-transform: uppercase; opacity: .9; }
+  .alert-ov .a2 { font-size: 42px; font-weight: 800; line-height: 1.05; margin: 8px 0; text-transform: uppercase; word-wrap: break-word; }
+  .alert-ov.eat .a2 { font-size: 64px; }
+  .alert-ov .a3 { font-size: 30px; font-weight: 700; }
+  .alert-ov.eat { background: #e07a00; }
+  .alert-ov.done { background: #1f9d55; }
+  .alert-ov.warn { background: #b3261e; }
+  .paused-banner { position: absolute; left: 0; right: 0; top: 34%; z-index: 5; text-align: center; font-size: 34px; font-weight: 800;
+    background: rgba(255,194,75,.92); color: #000; padding: 8px 0; letter-spacing: 2px; }
+  .toast { position: fixed; left: 12px; right: 12px; bottom: 16px; z-index: 50; background: #333; color: #fff; padding: 12px; border-radius: 10px; font-size: 15px; text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- ===================== INÍCIO ===================== -->
+<div id="home" class="view">
+  <div class="hdr"><h1>PEDAL</h1><button class="sec" id="btnCfg">Ajustes</button></div>
+
+  <div class="card hidden" id="resumeCard" style="background:#5a3b00">
+    <h2 style="color:#ffd27a">Pedal em andamento</h2>
+    <div id="resumeTxt"></div>
+    <button id="btnResume">Continuar pedal</button>
+  </div>
+
+  <div class="card">
+    <h2>Sensores</h2>
+    <div class="line"><span><i class="dot" id="hrDot"></i><span id="hrTxt">Cinta desconectada</span></span><button class="sm" id="btnHr">Conectar</button></div>
+    <div class="line"><span><i class="dot" id="gpsDot"></i><span id="gpsTxt">GPS procurando…</span></span></div>
+  </div>
+
+  <div class="card">
+    <h2>Treinos</h2>
+    <div id="wkList"><div class="tip">Nenhum treino salvo. Toque em Sincronizar com Wi-Fi.</div></div>
+    <button class="sec" id="btnFree">Pedal livre (sem treino)</button>
+  </div>
+
+  <div class="card">
+    <h2>Pedais gravados</h2>
+    <div id="rideList"><div class="tip">Nenhum pedal gravado ainda.</div></div>
+  </div>
+
+  <button id="btnSync">Sincronizar (Wi-Fi)</button>
+  <div class="msg dim" id="syncMsg"></div>
+</div>
+
+<!-- ===================== AJUSTES ===================== -->
+<div id="cfg" class="view hidden">
+  <div class="hdr"><h1>AJUSTES</h1><button class="sec" id="btnCfgBack">Voltar</button></div>
+
+  <div class="card">
+    <h2>Intervals.icu</h2>
+    <label>Chave de API (Intervals → Settings → Developer Settings)</label>
+    <input id="iKey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="msg" id="iMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>Strava</h2>
+    <div class="msg" id="sState"></div>
+    <label>Client ID</label>
+    <input id="sId" inputmode="numeric" autocomplete="off">
+    <label>Client Secret</label>
+    <input id="sSec" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button id="btnStrava">Conectar ao Strava</button>
+    <label>Ou cole o código de acesso (refresh token)</label>
+    <input id="sRt" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="tip" id="sRtShow"></div>
+  </div>
+
+  <div class="card">
+    <h2>Mapa de relevo</h2>
+    <div class="msg" id="demMsg"></div>
+  </div>
+
+  <button id="btnSave">Salvar ajustes</button>
+  <div class="msg" id="cfgMsg"></div>
+  <div class="tip" style="margin-top:20px">Dica: em Ajustes do iPhone → Tela e Brilho → Bloqueio Automático → <b>Nunca</b>. Com a tela apagada o iOS desliga o GPS.</div>
+  <div class="tip mono" id="ver" style="margin-top:12px"></div>
+</div>
+
+<!-- ===================== PEDAL ===================== -->
+<div id="ride" class="screen hidden">
+  <div class="blk top">
+    <div class="sens"><span id="sHr" class="off">● FC</span>  <span id="sGps" class="off">● GPS</span></div><div class="rec" id="recDot"></div>
+    <div class="step"><span id="stepName">—</span><span class="rep" id="stepRep"></span></div>
+    <div class="num remain"><span id="remain">0,00</span><span class="u" id="remainU">k<br>m</span></div>
+    <div class="target" id="target">livre</div>
+    <div class="bar" id="bar"></div>
+    <div class="pair" id="pair">
+      <div><div class="lbl">Próximo</div><div class="v" id="next">—</div></div>
+      <div><div class="lbl">Treino</div><div class="v num" id="wk">—</div></div>
+    </div>
+  </div>
+  <div class="sep"></div>
+  <div class="blk foot">
+    <div><div class="lbl">Veloc.</div><div class="v num"><span id="spd">0,0</span><span class="u">k<br>h</span></div></div>
+    <div><div class="lbl">Distância</div><div class="v num"><span id="dist">0,0</span><span class="u">k<br>m</span></div></div>
+    <div><div class="lbl">Tempo</div><div class="v num" id="time">0:00:00</div></div>
+  </div>
+  <div class="sep"></div>
+  <div class="blk graph">
+    <div class="ghead">
+      <div class="ico"><svg width="26" height="24" viewBox="0 0 24 22"><path fill="#ff2d3c" d="M12 21.6 10.3 20C4.2 14.6 0 10.9 0 6.5 0 2.9 2.8 0 6.4 0c2 0 4 1 5.6 2.5C13.6 1 15.6 0 17.6 0 21.2 0 24 2.9 24 6.5c0 4.4-4.2 8.1-10.3 13.5L12 21.6z"/></svg></div>
+      <div class="num big" id="hrNow">--</div>
+      <div class="stats"><div>MÉD<br>MÁX</div><div class="num" id="hrStats">--<br>--</div></div>
+    </div>
+    <canvas id="hrCv"></canvas>
+  </div>
+  <div class="sep"></div>
+  <div class="blk graph">
+    <div class="ghead">
+      <div class="ico"><svg width="26" height="20" viewBox="0 0 26 20"><path fill="#ffb300" d="M0 20 9 4l5 8 3-5 9 13z"/></svg></div>
+      <div class="num big" id="grade">--</div>
+      <div class="stats"><div>ALT<br>SUBIDA</div><div class="num" id="eleStats">--<br>0</div></div>
+    </div>
+    <canvas id="eleCv"></canvas>
+  </div>
+
+  <div class="paused-banner hidden" id="pausedBanner">PAUSADO</div>
+
+  <!-- Antes de começar -->
+  <div class="ov" id="ovStart">
+    <h3 id="startName">Treino</h3>
+    <p id="startInfo"></p>
+    <p style="margin-top:12px" id="startSensors"></p>
+    <button id="btnStart" style="margin-top:18px;font-size:22px;padding:18px">INICIAR</button>
+    <button class="sec" id="btnStartHr">Conectar cinta</button>
+    <button class="sec" id="btnStartBack">Voltar</button>
+    <p class="tip" style="margin-top:12px">Bloqueio Automático do iPhone em “Nunca”. Não saia do app durante o pedal.</p>
+  </div>
+
+  <!-- Menu (toque na tela) -->
+  <div class="ov hidden" id="ovMenu">
+    <button id="btnPause">Pausar</button>
+    <button class="sec" id="btnSkip">Pular para o próximo passo</button>
+    <button class="sec" id="btnMenuHr">Reconectar cinta</button>
+    <button class="danger" id="btnEnd">Encerrar e salvar pedal</button>
+    <button class="sec" id="btnMenuClose" style="margin-top:24px">Fechar</button>
+  </div>
+
+  <!-- Alerta de troca de passo -->
+  <div class="ov alert-ov hidden" id="ovAlert">
+    <div class="a1" id="al1"></div>
+    <div class="a2" id="al2"></div>
+    <div class="a3" id="al3"></div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+  var VERSION = 'v1';
+  function $(id) { return document.getElementById(id); }
+  function show(el, on) { (typeof el === 'string' ? $(el) : el).classList[on === false ? 'add' : 'remove']('hidden'); }
+  function hide(el) { show(el, false); }
+  function fmt(n, d) { return n.toFixed(d).replace('.', ','); }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function hms(s) { s = Math.max(0, Math.floor(s)); return Math.floor(s / 3600) + ':' + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60); }
+  function ms(s) { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + pad(s % 60); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  var DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  var toastT = 0;
+  function toast(t, sec) { var el = $('toast'); el.textContent = t; show(el); clearTimeout(toastT); toastT = setTimeout(function () { hide(el); }, (sec || 3) * 1000); }
+
+  // ---------- Modo demonstração (?demo): pedal simulado 20x mais rápido ----------
+  var DEMO = /[?&]demo/.test(location.search);
+  var K = DEMO ? 20 : 1, T0 = Date.now();
+  function now() { return DEMO ? T0 + (Date.now() - T0) * K : Date.now(); }
+
+  // ---------- Armazenamento ----------
+  var LS = window.localStorage, P = DEMO ? 'pdemo.' : 'pd.';
+  function jget(k, def) { try { var v = LS.getItem(P + k); return v ? JSON.parse(v) : def; } catch (e) { return def; } }
+  function jset(k, v) {
+    try { LS.setItem(P + k, JSON.stringify(v)); return true; }
+    catch (e) { toast('Erro ao salvar (memória cheia?): ' + e.message, 6); return false; }
+  }
+  function jdel(k) { LS.removeItem(P + k); }
+  var cfg = jget('cfg', {});
+  function saveCfg() { jset('cfg', cfg); }
+
+  // ---------- Zonas de FC (vêm do Intervals; padrão = bike atual) ----------
+  var ZCOL = ['#b4b6bd', '#1e9bff', '#22d64e', '#ffe11a', '#ff8a00', '#ff1a55', '#a21cff'];
+  var zones = jget('zones', [143, 159, 167, 177, 182, 187, 194]);
+  function zoneColor(hr) { for (var i = 0; i < zones.length; i++) if (hr <= zones[i]) return ZCOL[Math.min(i, 6)]; return ZCOL[6]; }
+  function gradeColor(g) {
+    if (g < 0) return '#4a4a52'; if (g < 3) return '#8bc34a'; if (g < 6) return '#ffd23f';
+    if (g < 9) return '#ff9800'; if (g < 12) return '#ef3b2c'; return '#a01622';
+  }
+
+  // ---------- Treinos ----------
+  // Achata o workout_doc do Intervals (com repetições) numa lista de passos.
+  function flatten(doc) {
+    var out = [], top = (doc && doc.steps) || [];
+    function mk(s, rep, def) {
+      var name = s.text || def || 'Passo', eat = /^comer/i.test(name);
+      return { n: eat ? 'Endurance' : name, eat: eat, rep: rep || '',
+        d: s.distance || 0, t: s.distance ? 0 : (s.duration || 0),
+        ed: s.distance || 0, hr: s._hr ? [Math.round(s._hr.start), Math.round(s._hr.end)] : null };
+    }
+    top.forEach(function (s, i) {
+      if (s.reps && s.steps) {
+        for (var r = 1; r <= s.reps; r++) s.steps.forEach(function (c) { out.push(mk(c, r + '/' + s.reps, 'Passo')); });
+      } else {
+        out.push(mk(s, '', i === 0 ? 'Aquecimento' : (i === top.length - 1 ? 'Volta à calma' : 'Endurance')));
+      }
+    });
+    return out;
+  }
+  var events = jget('events', []);
+
+  function demoEvent() {
+    var doc = { steps: [
+      { distance: 10000, _hr: { start: 115, end: 142 } },
+      { text: 'Tempo na subida 3x', reps: 3, steps: [
+        { text: 'Entrada', distance: 500 },
+        { text: 'Tempo', distance: 2000, _hr: { start: 160, end: 167 } },
+        { text: 'Descida', distance: 2500 }] },
+      { text: 'Comer', distance: 3000, _hr: { start: 115, end: 158 } },
+      { distance: 7000, _hr: { start: 106, end: 142 } }] };
+    return { id: 0, date: ymd(new Date()), name: 'Tempo subida 3x2,5 km (demo)', type: 'GravelRide', km: 35, steps: flatten(doc) };
+  }
+  if (DEMO && !events.length) events = [demoEvent()];
+
+  function renderWorkouts() {
+    var today = ymd(new Date()), html = '';
+    var list = events.filter(function (e) { return e.date >= today; });
+    list.forEach(function (e, i) {
+      var d = new Date(e.date + 'T12:00:00');
+      var when = e.date === today ? 'Hoje · ' : '';
+      html += '<div class="wk' + (e.date === today ? ' today' : '') + '" data-ev="' + events.indexOf(e) + '">' +
+        '<div class="when">' + when + DIAS[d.getDay()] + ' ' + e.date.slice(8, 10) + '/' + e.date.slice(5, 7) + '</div>' +
+        '<b>' + esc(e.name) + '</b><small>' + (e.km ? fmt(e.km, 0) + ' km · ' : '') + e.steps.length + ' passos</small></div>';
+    });
+    $('wkList').innerHTML = html || '<div class="tip">Nenhum treino de bike nos próximos dias. Sincronize com Wi-Fi.</div>';
+    var els = $('wkList').querySelectorAll('.wk');
+    for (var i = 0; i < els.length; i++) els[i].onclick = function () { prepareRide(events[+this.getAttribute('data-ev')]); };
+  }
+
+  // ---------- Mapa de relevo offline (dem.bin) ----------
+  // Cabeçalho: 6 Float64 (latNorte, lonOeste, passoLat, passoLon, linhas, colunas) + Uint16 em decímetros.
+  var DEM = null;
+  function loadDem() {
+    var x = new XMLHttpRequest();
+    x.open('GET', 'dem.bin'); x.responseType = 'arraybuffer';
+    x.onload = function () {
+      if (x.status !== 200 && x.status !== 0) { $('demMsg').innerHTML = '<span class="dim">Sem mapa de relevo: altitude pelo GPS.</span>'; return; }
+      try {
+        var h = new Float64Array(x.response, 0, 6);
+        DEM = { n: h[0], w: h[1], dl: h[2], dw: h[3], rows: h[4], cols: h[5], z: new Uint16Array(x.response, 48) };
+        $('demMsg').innerHTML = '<span class="ok">Mapa carregado: ' + fmt(DEM.rows * DEM.dl * 111, 0) + ' × ' + fmt(DEM.cols * DEM.dw * 104, 0) + ' km.</span>';
+      } catch (e) { $('demMsg').textContent = 'Mapa inválido: ' + e.message; }
+    };
+    x.onerror = function () { $('demMsg').innerHTML = '<span class="dim">Sem mapa de relevo: altitude pelo GPS.</span>'; };
+    x.send();
+  }
+  function demAlt(lat, lon) {
+    if (!DEM) return null;
+    var r = (DEM.n - lat) / DEM.dl, c = (lon - DEM.w) / DEM.dw;
+    if (r < 0 || c < 0 || r >= DEM.rows - 1 || c >= DEM.cols - 1) return null;
+    var r0 = Math.floor(r), c0 = Math.floor(c), fr = r - r0, fc = c - c0, z = DEM.z, W = DEM.cols;
+    var a = z[r0 * W + c0], b = z[r0 * W + c0 + 1], cc = z[(r0 + 1) * W + c0], d = z[(r0 + 1) * W + c0 + 1];
+    if (!a || !b || !cc || !d) return null;
+    return ((a * (1 - fc) + b * fc) * (1 - fr) + (cc * (1 - fc) + d * fc) * fr) / 10;
+  }
+
+  // ---------- Cinta (Bluetooth via Bluefy) ----------
+  var hr = null, hrAt = 0, hrDev = null, hrWanted = false;
+  function hrFresh() { return hrAt && Date.now() - hrAt < 5000; }
+  function onHr(ev) {
+    var v = ev.target.value, f = v.getUint8(0);
+    hr = (f & 1) ? v.getUint16(1, true) : v.getUint8(1);
+    hrAt = Date.now();
+  }
+  function hrConnectGatt() {
+    return hrDev.gatt.connect()
+      .then(function (s) { return s.getPrimaryService('heart_rate'); })
+      .then(function (s) { return s.getCharacteristic('heart_rate_measurement'); })
+      .then(function (ch) { ch.addEventListener('characteristicvaluechanged', onHr); return ch.startNotifications(); })
+      .then(function () { toast('Cinta conectada: ' + (hrDev.name || 'FC')); updateSensors(); });
+  }
+  function hrRetry() {
+    if (!hrWanted || !hrDev) return;
+    setTimeout(function () { hrConnectGatt().catch(function () { setTimeout(hrRetry, 3000); }); }, 1500);
+  }
+  function connectHr() {
+    if (DEMO) { hrWanted = true; hrAt = Date.now(); hr = 95; toast('Cinta simulada'); return; }
+    if (!navigator.bluetooth) { toast('Sem Bluetooth aqui. Abra o app no Bluefy.', 5); return; }
+    navigator.bluetooth.requestDevice({ filters: [{ services: ['heart_rate'] }] })
+      .then(function (d) {
+        hrDev = d; hrWanted = true;
+        d.addEventListener('gattserverdisconnected', function () { toast('Cinta desconectou, reconectando…'); hrRetry(); });
+        return hrConnectGatt();
+      })
+      .catch(function (e) { if (!/cancel/i.test(e.message)) toast('Cinta: ' + e.message, 5); });
+  }
+
+  // ---------- GPS ----------
+  var pos = null, posAt = 0, gpsErr = '';
+  function gpsFresh() { return posAt && now() - posAt < 5000; }
+  function onPos(c, t) {
+    pos = { lat: c.latitude, lon: c.longitude, acc: c.accuracy, alt: c.altitude, spd: (c.speed == null || c.speed < 0) ? null : c.speed };
+    posAt = t || now(); gpsErr = '';
+    if (R && R.on && !R.paused) rideOnPos(pos, posAt);
+  }
+  function startGps() {
+    if (DEMO) return; // posições simuladas no tick
+    if (!navigator.geolocation) { gpsErr = 'sem GPS'; return; }
+    navigator.geolocation.watchPosition(function (p) { onPos(p.coords, Date.now()); },
+      function (e) { gpsErr = e.code === 1 ? 'permissão negada' : e.message; },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
+  }
+  function hav(a, b) {
+    var R0 = 6371000, r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r;
+    var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return 2 * R0 * Math.asin(Math.sqrt(s));
+  }
+
+  function updateSensors() {
+    var hOk = hrFresh(), gOk = gpsFresh();
+    $('hrDot').className = 'dot' + (hOk ? ' on' : (hrWanted ? ' mid' : ''));
+    $('hrTxt').textContent = hOk ? 'Cinta: ' + hr + ' bpm' : (hrWanted ? 'Cinta sem sinal…' : 'Cinta desconectada');
+    $('gpsDot').className = 'dot' + (gOk ? (pos.acc <= 20 ? ' on' : ' mid') : '');
+    $('gpsTxt').textContent = gpsErr ? 'GPS: ' + gpsErr : (gOk ? 'GPS pronto · ±' + Math.round(pos.acc) + ' m' : 'GPS procurando…');
+    $('sHr').className = hOk ? 'on' : 'off'; $('sGps').className = gOk ? 'on' : 'off';
+    $('startSensors').innerHTML = (hOk ? '<span class="ok">● FC ' + hr + '</span>' : '<span class="bad">● sem cinta</span>') + '   ' +
+      (gOk ? '<span class="ok">● GPS ±' + Math.round(pos.acc) + ' m</span>' : '<span class="warn">● GPS procurando</span>');
+  }
+
+  // ---------- Pedal ----------
+  // Amostra: [tempo ms, lat, lon, alt, fc, distância m, passo]
+  var R = null, CH = 600;
+  function newRide(ev) {
+    var t = now();
+    return { id: 'r' + t, name: ev ? ev.name : 'Pedal livre', eventId: ev ? ev.id : null, steps: ev ? ev.steps : [],
+      start: t, si: 0, sd0: 0, sm0: 0, dist: 0, moving: 0, gain: 0, status: 'active', saved: 0,
+      on: false, paused: false, S: [], last: null, spd: 0, altRef: null, alts: [], up: {} };
+  }
+  function rideMeta(r) {
+    return { id: r.id, name: r.name, eventId: r.eventId, steps: r.steps, start: r.start, si: r.si, sd0: r.sd0, sm0: r.sm0,
+      dist: r.dist, moving: r.moving, gain: r.gain, status: r.status, n: r.S.length, up: r.up, end: r.end || null };
+  }
+  function saveRide(r, all) {
+    var from = all ? 0 : Math.floor(r.saved / CH), to = Math.floor(Math.max(0, r.S.length - 1) / CH);
+    for (var c = from; c <= to; c++) jset('r.' + r.id + '.' + c, r.S.slice(c * CH, (c + 1) * CH));
+    r.saved = r.S.length;
+    jset('r.' + r.id, rideMeta(r));
+    var ids = jget('rides', []);
+    if (ids.indexOf(r.id) < 0) { ids.unshift(r.id); jset('rides', ids); }
+  }
+  function loadRide(id) {
+    var m = jget('r.' + id, null); if (!m) return null;
+    var S = [];
+    for (var c = 0; c * CH < m.n; c++) S = S.concat(jget('r.' + id + '.' + c, []));
+    m.S = S; m.saved = S.length; return m;
+  }
+  function deleteRide(id) {
+    var m = jget('r.' + id, null);
+    if (m) for (var c = 0; c * CH < m.n + CH; c++) jdel('r.' + id + '.' + c);
+    jdel('r.' + id);
+    jset('rides', jget('rides', []).filter(function (x) { return x !== id; }));
+  }
+
+  function prepareRide(ev) {
+    R = newRide(ev);
+    openRideScreen();
+    $('startName').textContent = R.name;
+    var km = 0; R.steps.forEach(function (s) { km += s.ed; });
+    $('startInfo').textContent = R.steps.length ? R.steps.length + ' passos' + (km ? ' · ' + fmt(km / 1000, 1) + ' km' : '') : 'Sem treino: só grava e mostra os dados.';
+    $('btnStart').textContent = 'INICIAR';
+    show('ovStart');
+  }
+  function resumeRide(id) {
+    var m = loadRide(id); if (!m) return;
+    R = newRide(null);
+    for (var k in m) R[k] = m[k];
+    R.on = false; R.paused = true; R.last = null;
+    // Recalcula médias e altitude a partir das amostras salvas
+    openRideScreen();
+    $('startName').textContent = R.name;
+    $('startInfo').textContent = 'Continuando: ' + fmt(R.dist / 1000, 1) + ' km · ' + hms(R.moving);
+    $('btnStart').textContent = 'CONTINUAR';
+    show('ovStart');
+  }
+  function openRideScreen() {
+    hide('home'); hide('cfg'); show('ride'); hide('ovMenu'); hide('ovAlert');
+    renderRide(true);
+  }
+
+  var AC = null;
+  function unlockAudio() {
+    try {
+      if (!AC) { var C = window.AudioContext || window.webkitAudioContext; if (C) AC = new C(); }
+      if (AC) { var b = AC.createBuffer(1, 1, 22050), s = AC.createBufferSource(); s.buffer = b; s.connect(AC.destination); s.start(0); }
+    } catch (e) {}
+  }
+  function beep(n) {
+    if (!AC) return;
+    try {
+      for (var i = 0; i < n; i++) {
+        var o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime + i * 0.28;
+        o.type = 'square'; o.frequency.value = 1760; g.gain.value = 0.25;
+        o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + 0.16);
+      }
+    } catch (e) {}
+  }
+
+  $('btnStart').onclick = function () {
+    unlockAudio();
+    hide('ovStart');
+    if (!R.on) { R.on = true; R.paused = false; if (!R.S.length) { R.start = now(); stepAlert(true); } }
+    else R.paused = false;
+    R.last = null;
+    saveRide(R, true);
+    renderRide(true);
+  };
+  $('btnStartBack').onclick = function () {
+    if (R && R.S.length) saveRide(R);
+    else R = null;
+    goHome();
+  };
+
+  // Posição nova durante o pedal: soma distância (ignora tremida parada e saltos)
+  function rideOnPos(p, t) {
+    if (p.acc > 35) return;
+    if (R.last) {
+      var dd = hav(R.last, p), dt = Math.max(0.5, (t - R.last.t) / 1000);
+      var v = p.spd != null ? p.spd : dd / dt;
+      if (v > 0.8 && dd / dt < 30) R.dist += dd;
+      R.spd = R.spd ? R.spd * 0.6 + v * 0.4 : v;
+    }
+    R.last = { lat: p.lat, lon: p.lon, t: t };
+  }
+
+  // Altitude bruta: mapa de relevo; fora do mapa, GPS. A suavização é feita depois (smoothAlt).
+  function curAlt() {
+    if (!pos || !gpsFresh()) return null;
+    var a = demAlt(pos.lat, pos.lon);
+    return a != null ? a : pos.alt;
+  }
+  // Média centrada em W metros de distância. Testado contra o barômetro do Edge em 4 pedais
+  // de Viçosa: W=600 dá subida total de 0-25% do barômetro (sem suavizar dava o dobro).
+  function smoothAlt(S, W) {
+    var out = new Array(S.length), a = 0, b = 0, s = 0, n = 0;
+    for (var i = 0; i < S.length; i++) {
+      while (b < S.length && S[b][5] - S[i][5] <= W / 2) { if (S[b][3] != null) { s += S[b][3]; n++; } b++; }
+      while (S[i][5] - S[a][5] > W / 2) { if (S[a][3] != null) { s -= S[a][3]; n--; } a++; }
+      out[i] = S[i][3] == null || !n ? null : s / n;
+    }
+    return out;
+  }
+  function gainOf(sm) {
+    var g = 0, ref = null;
+    for (var i = 0; i < sm.length; i++) {
+      var v = sm[i]; if (v == null) continue;
+      if (ref == null) ref = v;
+      if (v - ref >= 3) { g += v - ref; ref = v; } else if (ref - v >= 3) ref = v;
+    }
+    return g;
+  }
+
+  function tick() {
+    if (DEMO) demoTick();
+    updateSensors();
+    if (!R || !R.on || R.paused) { if (R && !$('ride').classList.contains('hidden')) renderRide(false); return; }
+    var t = now(), moving = gpsFresh() && R.spd > 1;
+    if (moving) R.moving += 1;
+    else R.spd = gpsFresh() ? R.spd * 0.5 : 0;
+    var alt = curAlt(), gf = gpsFresh();
+    // [7] = altitude crua do GPS, guardada para comparar com o mapa depois
+    R.S.push([t, gf ? +pos.lat.toFixed(6) : null, gf ? +pos.lon.toFixed(6) : null,
+      alt == null ? null : Math.round(alt * 10) / 10, hrFresh() ? hr : null, Math.round(R.dist * 10) / 10, R.si,
+      gf && pos.alt != null ? Math.round(pos.alt * 10) / 10 : null]);
+    advanceSteps(t);
+    if (R.S.length % 5 === 0) saveRide(R);
+    renderRide(R.S.length % 2 === 0);
+  }
+
+  function advanceSteps() {
+    var s = R.steps[R.si]; if (!s) return;
+    var doneD = s.d && R.dist - R.sd0 >= s.d, doneT = s.t && R.moving - R.sm0 >= s.t;
+    if (doneD || doneT) nextStep();
+  }
+  function nextStep() {
+    R.si++; R.sd0 = R.dist; R.sm0 = R.moving;
+    stepAlert(false); saveRide(R);
+  }
+
+  var alertT = 0;
+  function showAlert(cls, l1, l2, l3, sec, beeps) {
+    var el = $('ovAlert'); el.className = 'ov alert-ov ' + cls;
+    $('al1').textContent = l1; $('al2').textContent = l2; $('al3').textContent = l3;
+    clearTimeout(alertT); alertT = setTimeout(function () { hide(el); }, sec * 1000);
+    beep(beeps);
+  }
+  function stepTxt(s) { return s.d ? fmt(s.d / 1000, s.d % 1000 ? 1 : 0) + ' km' : (s.t ? ms(s.t) + ' min' : ''); }
+  function stepAlert(first) {
+    var s = R.steps[R.si];
+    if (!R.steps.length) return;
+    if (!s) { showAlert('done', 'Fim do treino', 'Concluído!', 'Siga pedalando ou encerre', 8, 4); return; }
+    if (s.eat) { showAlert('eat', 'Hora de comer', 'COMER', 'Depois: ' + s.n + ' ' + stepTxt(s), 12, 5); return; }
+    showAlert('', first ? 'Primeiro passo' : 'Próximo passo' + (s.rep ? ' · ' + s.rep : ''), s.n,
+      stepTxt(s) + (s.hr ? ' · ' + s.hr[0] + '–' + s.hr[1] : ' · livre'), 6, 3);
+  }
+  $('ovAlert').onclick = function (e) { e.stopPropagation(); hide('ovAlert'); };
+
+  // ---------- Desenho da tela do pedal ----------
+  function renderRide(graphs) {
+    if (!R) return;
+    var s = R.steps[R.si], hOk = hrFresh();
+    $('recDot').className = 'rec' + (R.paused || !R.on ? ' paused' : '');
+    show('pausedBanner', !!(R.on && R.paused));
+    if (s) {
+      var left = s.d ? (s.d - (R.dist - R.sd0)) : (s.t - (R.moving - R.sm0));
+      $('stepName').textContent = s.n; $('stepRep').textContent = s.rep;
+      $('remain').textContent = s.d ? fmt(Math.max(0, left) / 1000, 2) : ms(left);
+      $('remainU').innerHTML = s.d ? 'k<br>m' : '';
+      var tg = $('target');
+      if (s.hr) {
+        var arrow = '';
+        if (hOk && hr > s.hr[1]) arrow = ' ▼'; else if (hOk && hr < s.hr[0]) arrow = ' ▲';
+        tg.textContent = s.hr[0] + '–' + s.hr[1] + arrow; tg.style.background = zoneColor(s.hr[1]);
+        tg.className = 'target' + (arrow ? ' alert' : '');
+      } else { tg.textContent = 'livre'; tg.style.background = '#d8d8dc'; tg.className = 'target'; }
+      show('target');
+      var nx = R.steps[R.si + 1];
+      $('next').textContent = nx ? (nx.eat ? 'Comer · ' : nx.n + ' ') + stepTxt(nx) : 'Fim';
+    } else {
+      $('stepName').textContent = R.steps.length ? 'Treino concluído' : 'Pedal livre'; $('stepRep').textContent = '';
+      $('remain').textContent = fmt(R.dist / 1000, 2); $('remainU').innerHTML = 'k<br>m';
+      hide('target'); $('next').textContent = '—';
+    }
+    // Barra e total do treino
+    var tot = 0; R.steps.forEach(function (x) { tot += x.ed; });
+    if (R.steps.length && tot) {
+      show('bar'); show('pair');
+      var done = 0; for (var i = 0; i < Math.min(R.si, R.steps.length); i++) done += R.steps[i].ed;
+      var curEnd = done;
+      if (s) { var frac = s.d ? (R.dist - R.sd0) / s.d : (R.moving - R.sm0) / s.t; done += s.ed * Math.min(1, frac); curEnd += s.ed; }
+      var pc = function (m) { return (Math.min(m, tot) / tot * 100).toFixed(2) + '%'; };
+      var h = '<div style="left:0;width:' + pc(done) + ';background:#2ee05a"></div>';
+      if (s) h += '<div style="left:' + pc(done) + ';width:' + pc(curEnd - done) + ';background:#f4f4f6"></div>';
+      var acc = 0; R.steps.forEach(function (x, k) { if (k) h += '<i style="left:' + pc(acc) + '"></i>'; acc += x.ed; });
+      $('bar').innerHTML = h;
+      $('wk').textContent = fmt(R.dist / 1000, 1) + ' / ' + Math.round(tot / 1000) + ' km';
+    } else { hide('bar'); hide('pair'); }
+    // Rodapé
+    $('spd').textContent = fmt((gpsFresh() && R.on && !R.paused ? R.spd : 0) * 3.6, 1);
+    $('dist').textContent = fmt(R.dist / 1000, 1);
+    $('time').textContent = hms(R.moving);
+    // FC
+    $('hrNow').textContent = hOk ? hr : '--';
+    $('hrNow').style.color = hOk ? zoneColor(hr) : '#fff';
+    var sum = 0, n = 0, mx = 0;
+    if (graphs || !R.hrStat) {
+      R.S.forEach(function (x) { if (x[4]) { sum += x[4]; n++; if (x[4] > mx) mx = x[4]; } });
+      R.hrStat = n ? [Math.round(sum / n), mx] : null;
+    }
+    $('hrStats').innerHTML = R.hrStat ? R.hrStat[0] + '<br>' + R.hrStat[1] : '--<br>--';
+    // Altimetria
+    if (graphs || !R.sm) { R.sm = smoothAlt(R.S, 600); R.gain = gainOf(R.sm); }
+    var g = gradeNow(), alt = R.sm.length ? R.sm[R.sm.length - 1] : null;
+    $('grade').textContent = g == null ? '--' : Math.round(g) + '%';
+    $('grade').style.color = g == null ? '#fff' : gradeColor(g);
+    $('eleStats').innerHTML = (alt == null ? '--' : Math.round(alt)) + '<br>' + Math.round(R.gain);
+    if (graphs) { drawHr(); drawEle(); }
+  }
+  // Inclinação ao vivo: altitude crua nos últimos 300 m (o melhor que o mapa permitiu, erro ~±3 pontos)
+  function gradeNow() {
+    var S = R.S, n = S.length; if (n < 2) return null;
+    var a = S[n - 1]; if (a[3] == null) return null;
+    for (var i = n - 2; i >= 0; i--) {
+      if (S[i][3] == null) return null;
+      var dd = a[5] - S[i][5];
+      if (dd >= 300) return (a[3] - S[i][3]) / dd * 100;
+      if (a[0] - S[i][0] > 300000) return null;
+    }
+    return null;
+  }
+
+  function setup(cv) {
+    var r = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * r) || cv.height !== Math.round(h * r)) { cv.width = Math.round(w * r); cv.height = Math.round(h * r); }
+    var c = cv.getContext('2d'); c.setTransform(r, 0, 0, r, 0, 0); c.clearRect(0, 0, w, h);
+    return { c: c, w: w, h: h };
+  }
+  function drawHr() {
+    var g = setup($('hrCv')), c = g.c, w = g.w, h = g.h, S = R.S, lo = 90, hi = Math.max(190, zones[6] || 190);
+    var cols = Math.floor(w); if (!S.length || !cols) return;
+    // Poucas amostras: cada uma vira uma coluna larga; muitas: agrupa por pixel.
+    var nb = Math.min(cols, S.length), per = S.length / nb, xs = w / nb;
+    for (var x = 0; x < nb; x++) {
+      var a = Math.floor(x * per), b = Math.max(a + 1, Math.floor((x + 1) * per)), s = 0, k2 = 0;
+      for (var k = a; k < b && k < S.length; k++) if (S[k][4]) { s += S[k][4]; k2++; }
+      if (!k2) continue;
+      var v = s / k2, y = h - Math.max(0, (v - lo)) / (hi - lo) * h;
+      c.fillStyle = zoneColor(v);
+      c.fillRect(x * xs, y, xs + 0.02, h - y);
+    }
+    var st = R.steps[R.si];
+    if (st && st.hr) {
+      c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 1; if (c.setLineDash) c.setLineDash([4, 4]);
+      st.hr.forEach(function (bpm) { var y = Math.round(h - (bpm - lo) / (hi - lo) * h) + 0.5; c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); });
+    }
+  }
+  function drawEle() {
+    var g = setup($('eleCv')), c = g.c, w = g.w, h = g.h, S = R.S, sm = R.sm || [];
+    var P2 = []; S.forEach(function (x, i) { if (sm[i] != null) P2.push([x[5], sm[i]]); });
+    if (P2.length < 2) return;
+    var d0 = P2[0][0], d1 = P2[P2.length - 1][0]; if (d1 - d0 < 50) return;
+    var lo = Infinity, hi = -Infinity; P2.forEach(function (x) { if (x[1] < lo) lo = x[1]; if (x[1] > hi) hi = x[1]; });
+    var pad2 = Math.max(15, (hi - lo) * 0.15); lo -= pad2; hi += pad2;
+    var cols = Math.floor(w), step = (d1 - d0) / cols, idx = 0;
+    function altD(dx) { while (idx < P2.length - 1 && P2[idx + 1][0] <= dx) idx++; return P2[idx][1]; }
+    var win = Math.max(step, 200);
+    for (var x = 0; x < cols; x++) {
+      var da = d0 + x * step, a0 = altD(da), sv = idx, a1 = altD(Math.min(d1, da + win)); idx = sv;
+      var gr = (a1 - a0) / win * 100, y = h - (a0 - lo) / (hi - lo) * h;
+      c.fillStyle = gradeColor(gr); c.fillRect(x, y, 1.02, h - y);
+    }
+  }
+
+  // ---------- Menu do pedal ----------
+  $('ride').addEventListener('click', function (e) {
+    if (!R || !R.on) return;
+    var t = e.target; while (t && t !== this) { if (t.classList && t.classList.contains('ov')) return; t = t.parentNode; }
+    $('btnPause').textContent = R.paused ? 'Continuar' : 'Pausar';
+    show('ovMenu');
+  });
+  $('btnMenuClose').onclick = function (e) { e.stopPropagation(); hide('ovMenu'); };
+  $('btnPause').onclick = function (e) {
+    e.stopPropagation(); unlockAudio();
+    R.paused = !R.paused; R.last = null; saveRide(R); hide('ovMenu'); renderRide(true);
+  };
+  $('btnSkip').onclick = function (e) { e.stopPropagation(); hide('ovMenu'); if (R.steps[R.si]) nextStep(); };
+  $('btnMenuHr').onclick = function (e) { e.stopPropagation(); hide('ovMenu'); connectHr(); };
+  $('btnStartHr').onclick = function (e) { e.stopPropagation(); connectHr(); };
+  $('btnEnd').onclick = function (e) {
+    e.stopPropagation();
+    if (!confirm('Encerrar e salvar o pedal?')) return;
+    R.on = false; R.status = 'done'; R.end = now(); saveRide(R, true);
+    var id = R.id; R = null;
+    goHome();
+    toast('Pedal salvo. Envie com Wi-Fi em “Sincronizar”.', 5);
+    if (navigator.onLine && !DEMO) uploadRide(id);
+  };
+
+  // Tela apagou / saiu do app
+  var hiddenAt = 0;
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { hiddenAt = Date.now(); if (R && R.on) saveRide(R); return; }
+    if (hiddenAt && R && R.on && !R.paused && Date.now() - hiddenAt > 4000)
+      showAlert('warn', 'Atenção', 'GPS parou', 'App ficou ' + Math.round((Date.now() - hiddenAt) / 1000) + ' s em segundo plano', 6, 2);
+    hiddenAt = 0;
+  });
+  window.addEventListener('pagehide', function () { if (R && R.on) saveRide(R); });
+
+  // ---------- Arquivo TCX ----------
+  function iso(t) { return new Date(t).toISOString().replace(/\.\d{3}Z$/, 'Z'); }
+  function buildTcx(r) {
+    var S = r.S, out = [], laps = [], cur = null, sm = smoothAlt(S, 600);
+    S.forEach(function (x, i) { if (!cur || x[6] !== cur.si) { cur = { si: x[6], a: i }; laps.push(cur); } cur.b = i; });
+    out.push('<?xml version="1.0" encoding="UTF-8"?>\n<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2">\n<Activities><Activity Sport="Biking"><Id>' + iso(S[0][0]) + '</Id>');
+    laps.forEach(function (L) {
+      var a = S[L.a], b = S[L.b], sum = 0, n = 0, mx = 0;
+      for (var i = L.a; i <= L.b; i++) if (S[i][4]) { sum += S[i][4]; n++; mx = Math.max(mx, S[i][4]); }
+      out.push('<Lap StartTime="' + iso(a[0]) + '"><TotalTimeSeconds>' + ((b[0] - a[0]) / 1000 + 1).toFixed(0) + '</TotalTimeSeconds><DistanceMeters>' +
+        (b[5] - a[5]).toFixed(1) + '</DistanceMeters><Calories>0</Calories>' +
+        (n ? '<AverageHeartRateBpm><Value>' + Math.round(sum / n) + '</Value></AverageHeartRateBpm><MaximumHeartRateBpm><Value>' + mx + '</Value></MaximumHeartRateBpm>' : '') +
+        '<Intensity>Active</Intensity><TriggerMethod>Manual</TriggerMethod><Track>');
+      for (var j = L.a; j <= L.b; j++) {
+        var x = S[j], tp = '<Trackpoint><Time>' + iso(x[0]) + '</Time>';
+        if (x[1] != null) tp += '<Position><LatitudeDegrees>' + x[1] + '</LatitudeDegrees><LongitudeDegrees>' + x[2] + '</LongitudeDegrees></Position>';
+        if (sm[j] != null) tp += '<AltitudeMeters>' + sm[j].toFixed(1) + '</AltitudeMeters>';
+        tp += '<DistanceMeters>' + x[5] + '</DistanceMeters>';
+        if (x[4]) tp += '<HeartRateBpm><Value>' + x[4] + '</Value></HeartRateBpm>';
+        out.push(tp + '</Trackpoint>');
+      }
+      out.push('</Track></Lap>');
+    });
+    out.push('</Activity></Activities></TrainingCenterDatabase>');
+    return out.join('\n');
+  }
+
+  // ---------- Envio: Intervals.icu ----------
+  function iAuth() { return 'Basic ' + btoa('API_KEY:' + cfg.ikey); }
+  function uploadIntervals(r, tcx) {
+    var fd = new FormData();
+    fd.append('file', new Blob([tcx], { type: 'application/vnd.garmin.tcx+xml' }), r.id + '.tcx');
+    return fetch('https://intervals.icu/api/v1/athlete/0/activities?name=' + encodeURIComponent(r.name), {
+      method: 'POST', headers: { Authorization: iAuth() }, body: fd
+    }).then(function (res) {
+      return res.text().then(function (t) {
+        if (!res.ok) throw new Error('Intervals HTTP ' + res.status + ' ' + t.slice(0, 120));
+        var j = {}; try { j = JSON.parse(t); } catch (e) {}
+        return j.id || (j.activities && j.activities[0] && j.activities[0].id) || 'ok';
+      });
+    });
+  }
+
+  // ---------- Envio: Strava ----------
+  function stravaToken() {
+    if (cfg.sat && cfg.sexp && cfg.sexp * 1000 > Date.now() + 120000) return Promise.resolve(cfg.sat);
+    if (!cfg.sid || !cfg.ssec || !cfg.srt) return Promise.reject(new Error('Strava não conectado'));
+    return fetch('https://www.strava.com/oauth/token', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id: cfg.sid, client_secret: cfg.ssec, grant_type: 'refresh_token', refresh_token: cfg.srt })
+    }).then(function (res) { return res.json().then(function (j) {
+      if (!res.ok || !j.access_token) throw new Error('Strava token: ' + (j.message || res.status));
+      cfg.sat = j.access_token; cfg.sexp = j.expires_at; if (j.refresh_token) cfg.srt = j.refresh_token; saveCfg();
+      return cfg.sat;
+    }); });
+  }
+  function wait(msec) { return new Promise(function (ok) { setTimeout(ok, msec); }); }
+  function uploadStrava(r, tcx) {
+    return stravaToken().then(function (tok) {
+      var fd = new FormData();
+      fd.append('file', new Blob([tcx], { type: 'application/vnd.garmin.tcx+xml' }), r.id + '.tcx');
+      fd.append('data_type', 'tcx'); fd.append('name', r.name); fd.append('external_id', 'pedal-' + r.id);
+      return fetch('https://www.strava.com/api/v3/uploads', { method: 'POST', headers: { Authorization: 'Bearer ' + tok }, body: fd })
+        .then(function (res) { return res.json().then(function (j) {
+          if (!res.ok) throw new Error('Strava ' + res.status + ': ' + (j.message || '') + ' ' + JSON.stringify(j.errors || ''));
+          return poll(j.id_str || j.id, 0);
+        }); });
+      function poll(uid, n) {
+        return wait(2500).then(function () {
+          return fetch('https://www.strava.com/api/v3/uploads/' + uid, { headers: { Authorization: 'Bearer ' + tok } });
+        }).then(function (res) { return res.json(); }).then(function (j) {
+          if (j.activity_id) return j.activity_id;
+          if (j.error) { var m = /duplicate of .*?(\d+)/i.exec(j.error); if (m) return m[1]; throw new Error('Strava: ' + j.error); }
+          if (n > 20) return 'processando';
+          return poll(uid, n + 1);
+        });
+      }
+    });
+  }
+
+  var uploading = false;
+  function uploadRide(id) {
+    var r = loadRide(id);
+    if (!r || !r.S.length) return Promise.resolve();
+    var tcx = buildTcx(r), errs = [];
+    var p = Promise.resolve();
+    if (!r.up.i && cfg.ikey) p = p.then(function () { return uploadIntervals(r, tcx).then(function (x) { r.up.i = x; }, function (e) { errs.push(e.message); }); });
+    if (!r.up.s && cfg.srt) p = p.then(function () { return uploadStrava(r, tcx).then(function (x) { r.up.s = x; }, function (e) { errs.push(e.message); }); });
+    return p.then(function () { r.up.err = errs.join('\n'); jset('r.' + r.id, rideMeta(r)); renderRides(); return errs; });
+  }
+
+  // ---------- Sincronizar ----------
+  function sync() {
+    if (uploading) return;
+    var msg = $('syncMsg'), lines = [];
+    function say(t) { lines.push(t); msg.textContent = lines.join('\n'); }
+    if (DEMO) { say('Modo demonstração: nada é enviado.'); return; }
+    if (!cfg.ikey) { say('Coloque a chave do Intervals em Ajustes.'); return; }
+    uploading = true; msg.textContent = 'Sincronizando…';
+    var today = new Date(), d0 = ymd(new Date(today.getTime() - 864e5)), d1 = ymd(new Date(today.getTime() + 13 * 864e5));
+    fetch('https://intervals.icu/api/v1/athlete/0', { headers: { Authorization: iAuth() } })
+      .then(function (res) { if (!res.ok) throw new Error('Intervals HTTP ' + res.status + (res.status === 401 || res.status === 403 ? ' (chave errada?)' : '')); return res.json(); })
+      .then(function (a) {
+        var ss = (a.sportSettings || []).filter(function (s) { return (s.types || []).indexOf('Ride') >= 0; })[0];
+        if (ss && ss.hr_zones) { zones = ss.hr_zones; jset('zones', zones); }
+        return fetch('https://intervals.icu/api/v1/athlete/0/events?category=WORKOUT&resolve=true&oldest=' + d0 + '&newest=' + d1, { headers: { Authorization: iAuth() } });
+      })
+      .then(function (res) { if (!res.ok) throw new Error('Intervals HTTP ' + res.status); return res.json(); })
+      .then(function (evs) {
+        events = evs.filter(function (e) { return /Ride/.test(e.type || '') && e.workout_doc; }).map(function (e) {
+          return { id: e.id, date: e.start_date_local.slice(0, 10), name: e.name, type: e.type,
+            km: e.distance ? e.distance / 1000 : 0, steps: flatten(e.workout_doc) };
+        });
+        jset('events', events); renderWorkouts();
+        say('✓ ' + events.length + ' treino(s) de bike baixados. Zonas atualizadas.');
+        var pend = jget('rides', []).filter(function (id) { var m = jget('r.' + id, null); return m && m.status === 'done' && (!m.up.i || (cfg.srt && !m.up.s)); });
+        var p = Promise.resolve();
+        pend.forEach(function (id) { p = p.then(function () { say('Enviando pedal…'); return uploadRide(id).then(function (errs) { say(errs && errs.length ? '✗ ' + errs.join(' / ') : '✓ Pedal enviado.'); }); }); });
+        return p;
+      })
+      .then(function () { jset('lastSync', Date.now()); say('Sincronizado ' + new Date().toLocaleTimeString().slice(0, 5)); })
+      .catch(function (e) { say('✗ ' + e.message + (/Failed|Load failed|network/i.test(e.message) ? ' (sem internet?)' : '')); })
+      .then(function () { uploading = false; renderRides(); });
+  }
+  $('btnSync').onclick = sync;
+
+  function renderRides() {
+    var ids = jget('rides', []), html = '', active = null;
+    ids.forEach(function (id) {
+      var m = jget('r.' + id, null); if (!m) return;
+      if (m.status === 'active') { active = m; return; }
+      var d = new Date(m.start);
+      var st = (m.up.i ? '<span class="ok">Intervals ✓</span>' : '<span class="warn">Intervals pendente</span>') + ' · ' +
+        (m.up.s ? '<span class="ok">Strava ✓</span>' : (cfg.srt ? '<span class="warn">Strava pendente</span>' : '<span class="dim">Strava não conectado</span>'));
+      html += '<div class="ride-item"><b>' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' · ' + esc(m.name) + '</b><br>' +
+        fmt(m.dist / 1000, 1) + ' km · ' + hms(m.moving) + '<br>' + st +
+        (m.up.err ? '<div class="bad" style="font-size:13px">' + esc(m.up.err) + '</div>' : '') +
+        '<div style="margin-top:6px"><button class="sm sec" style="margin:0" data-del="' + id + '">Apagar</button></div></div>';
+    });
+    $('rideList').innerHTML = html || '<div class="tip">Nenhum pedal gravado ainda.</div>';
+    var b = $('rideList').querySelectorAll('[data-del]');
+    for (var i = 0; i < b.length; i++) b[i].onclick = function () {
+      var id = this.getAttribute('data-del'), m = jget('r.' + id, null);
+      var sent = m && m.up.i && (m.up.s || !cfg.srt);
+      if (!confirm(sent ? 'Apagar este pedal do celular? (já foi enviado)' : 'ATENÇÃO: este pedal ainda NÃO foi enviado. Apagar mesmo assim?')) return;
+      deleteRide(id); renderRides();
+    };
+    if (active) {
+      show('resumeCard');
+      $('resumeTxt').textContent = active.name + ' · ' + fmt(active.dist / 1000, 1) + ' km · ' + hms(active.moving);
+      $('btnResume').onclick = function () { resumeRide(active.id); };
+    } else hide('resumeCard');
+  }
+
+  function goHome() { hide('ride'); hide('cfg'); show('home'); renderWorkouts(); renderRides(); }
+
+  // ---------- Ajustes ----------
+  function renderCfg() {
+    $('iKey').value = cfg.ikey || ''; $('sId').value = cfg.sid || ''; $('sSec').value = cfg.ssec || ''; $('sRt').value = '';
+    $('sState').innerHTML = cfg.srt ? '<span class="ok">Conectado ao Strava ✓</span>' : '<span class="dim">Não conectado.</span>';
+    $('sRtShow').innerHTML = cfg.srt ? 'Código de acesso (para copiar para outro aparelho):<br><span class="mono">' + esc(cfg.srt) + '</span>' : '';
+    $('ver').textContent = 'Pedal ' + VERSION + (DEMO ? ' · DEMO' : '') + ' · ' + navigator.userAgent;
+  }
+  $('btnCfg').onclick = function () { hide('home'); show('cfg'); renderCfg(); };
+  $('btnCfgBack').onclick = goHome;
+  function readCfgForm() {
+    cfg.ikey = $('iKey').value.trim(); cfg.sid = $('sId').value.trim(); cfg.ssec = $('sSec').value.trim();
+    var rt = $('sRt').value.trim(); if (rt) { cfg.srt = rt; cfg.sat = ''; cfg.sexp = 0; }
+    saveCfg();
+  }
+  $('btnSave').onclick = function () {
+    readCfgForm(); renderCfg();
+    $('cfgMsg').innerHTML = '<span class="ok">Salvo.</span>';
+    if (cfg.ikey && navigator.onLine) {
+      $('iMsg').textContent = 'Testando chave…';
+      fetch('https://intervals.icu/api/v1/athlete/0', { headers: { Authorization: iAuth() } })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function (a) { $('iMsg').innerHTML = '<span class="ok">Chave OK: ' + esc(a.name || a.id) + '</span>'; })
+        .catch(function (e) { $('iMsg').innerHTML = '<span class="bad">Chave não funcionou (' + e.message + ')</span>'; });
+    }
+  };
+  function redirectUri() { return location.origin + location.pathname; }
+  $('btnStrava').onclick = function () {
+    readCfgForm();
+    if (!cfg.sid || !cfg.ssec) { $('sState').innerHTML = '<span class="bad">Preencha Client ID e Client Secret.</span>'; return; }
+    location.href = 'https://www.strava.com/oauth/authorize?client_id=' + encodeURIComponent(cfg.sid) +
+      '&response_type=code&approval_prompt=auto&scope=read,activity:write&redirect_uri=' + encodeURIComponent(redirectUri());
+  };
+  function handleStravaReturn() {
+    var q = location.search, m = /[?&]code=([^&]+)/.exec(q), er = /[?&]error=([^&]+)/.exec(q);
+    if (!m && !er) return;
+    history.replaceState(null, '', redirectUri());
+    hide('home'); show('cfg'); renderCfg();
+    if (er) { $('sState').innerHTML = '<span class="bad">Strava recusou: ' + esc(decodeURIComponent(er[1])) + '</span>'; return; }
+    if (!/activity:write/.test(q)) { $('sState').innerHTML = '<span class="bad">Marque a permissão de enviar atividades e tente de novo.</span>'; return; }
+    $('sState').textContent = 'Concluindo conexão…';
+    fetch('https://www.strava.com/oauth/token', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id: cfg.sid, client_secret: cfg.ssec, code: decodeURIComponent(m[1]), grant_type: 'authorization_code' })
+    }).then(function (r) { return r.json().then(function (j) {
+      if (!r.ok || !j.refresh_token) throw new Error(j.message || ('HTTP ' + r.status));
+      cfg.srt = j.refresh_token; cfg.sat = j.access_token; cfg.sexp = j.expires_at; saveCfg(); renderCfg();
+    }); }).catch(function (e) { $('sState').innerHTML = '<span class="bad">Falhou: ' + esc(e.message) + '</span>'; });
+  }
+
+  // ---------- Botões da tela inicial ----------
+  $('btnHr').onclick = connectHr;
+  $('btnFree').onclick = function () { prepareRide(null); };
+
+  // ---------- Simulador (só ?demo) ----------
+  var demo = { d: 0, lat: -20.7546, lon: -42.8825, hr: 95, t: 0 };
+  function demoTick() {
+    demo.t++;
+    if (hrWanted) { hr = Math.round(demo.hr); hrAt = Date.now(); }
+    if (!pos || !R || !R.on || R.paused) { onPos({ latitude: demo.lat, longitude: demo.lon, accuracy: 6, altitude: 650, speed: 0 }, now()); return; }
+    var st = R.steps[R.si] || {}, climb = /Tempo|Entrada/.test(st.n || ''), down = /Descida/.test(st.n || '');
+    var v = climb ? 3.9 : down ? 10.5 : 7.5;
+    demo.lat += v / 111320 * 0.7; demo.lon += v / (111320 * Math.cos(demo.lat * Math.PI / 180)) * 0.7;
+    var goal = st.hr ? (st.hr[0] + st.hr[1]) / 2 + 2 : (down ? 125 : 150);
+    demo.hr += (goal - demo.hr) * 0.03 + (Math.sin(demo.t * 1.7) * 1.2);
+    hr = Math.round(demo.hr); hrAt = Date.now();
+    if (R.altDemo == null) R.altDemo = 650;
+    R.altDemo += climb ? v * 0.065 : down ? -v * 0.06 : Math.sin(demo.t / 300) * 0.3;
+    onPos({ latitude: demo.lat, longitude: demo.lon, accuracy: 5, altitude: R.altDemo, speed: v }, now());
+  }
+
+  // ---------- AppCache: aviso de atualização ----------
+  var ac = window.applicationCache;
+  if (ac) {
+    ac.addEventListener('updateready', function () {
+      try { ac.swapCache(); } catch (e) {}
+      if (!R || !R.on) location.reload(); else toast('Nova versão baixada. Ela abre no próximo pedal.', 5);
+    });
+  }
+
+  // ---------- Início ----------
+  if (DEMO) window.__pd = { buildTcx: buildTcx, loadRide: loadRide, rides: function () { return jget('rides', []); } };
+  loadDem();
+  startGps();
+  handleStravaReturn();
+  goHome();
+  if (!DEMO && !cfg.ikey) toast('Primeiro: Ajustes → chave do Intervals.', 5);
+  setInterval(tick, 1000 / K);
+  window.addEventListener('resize', function () { if (R) renderRide(true); });
+})();
+</script>
+</body>
+</html>
