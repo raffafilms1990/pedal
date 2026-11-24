@@ -8,7 +8,7 @@
 <title>Pedal</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; background: #1c1c1e; color: #fff; -webkit-user-select: none; user-select: none;
+  html, body { height: 100%; background: #000; color: #fff; -webkit-user-select: none; user-select: none;
     font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; }
   .hidden { display: none !important; }
   .ok { color: #3ddc84; } .bad { color: #ff5c6c; } .warn { color: #ffc24b; } .dim { color: #8a8a96; }
@@ -19,30 +19,30 @@
   .hdr { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: center; -webkit-align-items: center; align-items: center; margin-bottom: 12px; }
   .hdr h1 { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; font-size: 22px; font-weight: 800; letter-spacing: 1px; }
   .hdr button { width: auto; margin: 0; padding: 8px 12px; font-size: 15px; }
-  .card { background: #2a2a2e; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+  .card { background: #111113; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
   .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #c084fc; margin-bottom: 8px; font-weight: 700; }
   .line { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: center; -webkit-align-items: center; align-items: center; padding: 4px 0; font-size: 16px; }
   .line > span:first-child { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; }
   .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; background: #555; }
   .dot.on { background: #3ddc84; } .dot.mid { background: #ffc24b; }
   button { -webkit-appearance: none; appearance: none; border: 0; border-radius: 10px; background: #e3263b; color: #fff; font-size: 17px; font-weight: 700; padding: 13px 14px; width: 100%; margin-top: 8px; font-family: inherit; }
-  button.sec { background: #3a3a42; } button.danger { background: #6a1f2b; } button.sm { width: auto; padding: 7px 12px; font-size: 14px; margin: 0 0 0 8px; }
+  button.sec { background: #26262b; } button.danger { background: #6a1f2b; } button.sm { width: auto; padding: 7px 12px; font-size: 14px; margin: 0 0 0 8px; }
   button:active { opacity: .7; }
-  input { width: 100%; font-size: 16px; padding: 11px; border-radius: 8px; border: 1px solid #444; background: #151518; color: #fff; margin-top: 6px; font-family: inherit; -webkit-user-select: text; user-select: text; }
+  input { width: 100%; font-size: 16px; padding: 11px; border-radius: 8px; border: 1px solid #444; background: #000; color: #fff; margin-top: 6px; font-family: inherit; -webkit-user-select: text; user-select: text; }
   label { display: block; font-size: 13px; color: #8a8a96; margin-top: 10px; }
-  .wk { background: #34343a; border-radius: 10px; padding: 11px 12px; margin-top: 8px; }
+  .wk { background: #1c1c20; border-radius: 10px; padding: 11px 12px; margin-top: 8px; }
   .wk.today { background: #5c1420; border: 1px solid #e3263b; }
   .wk b { display: block; font-size: 17px; margin-top: 2px; }
   .wk small { font-size: 13px; color: #b5b5c0; }
   .wk .when { font-size: 12px; font-weight: 700; color: #c084fc; text-transform: uppercase; letter-spacing: .5px; }
-  .ride-item { border-top: 1px solid #3a3a42; padding: 10px 0; font-size: 15px; }
+  .ride-item { border-top: 1px solid #26262b; padding: 10px 0; font-size: 15px; }
   .ride-item:first-of-type { border-top: 0; }
   .msg { font-size: 14px; margin-top: 8px; min-height: 18px; white-space: pre-line; }
   .tip { font-size: 13px; color: #9a9aa6; line-height: 1.4; margin-top: 6px; }
   .mono { font-family: Menlo, monospace; font-size: 13px; word-break: break-all; -webkit-user-select: text; user-select: text; }
 
   /* ---------- Tela do pedal (layout aprovado) ---------- */
-  .screen { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: #1c1c1e; padding-bottom: 8px; overflow: hidden;
+  .screen { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: #000; padding-bottom: 8px; overflow: hidden;
     display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column; }
   .blk { position: relative; padding: 0 10px; }
   .sep { height: 2px; background: #22c55e; margin: 0 10px; -webkit-flex-shrink: 0; flex-shrink: 0; }
@@ -56,9 +56,9 @@
   .target { display: inline-block; margin-top: 2px; padding: 2px 10px; border-radius: 6px; font-size: 17px; font-weight: 700; color: #000; background: #d8d8dc; }
   .target.alert { -webkit-animation: blink 1s infinite; animation: blink 1s infinite; }
   @-webkit-keyframes blink { 50% { opacity: .35; } } @keyframes blink { 50% { opacity: .35; } }
-  .bar { position: relative; height: 15px; border: 2px solid #d8d8dc; border-radius: 3px; margin: 8px 0 6px; overflow: hidden; background: #2b2b30; }
+  .bar { position: relative; height: 15px; border: 2px solid #d8d8dc; border-radius: 3px; margin: 8px 0 6px; overflow: hidden; background: #1a1a1a; }
   .bar div { position: absolute; top: 0; bottom: 0; }
-  .bar i { position: absolute; top: 0; bottom: 0; width: 1px; background: #1c1c1e; }
+  .bar i { position: absolute; top: 0; bottom: 0; width: 1px; background: #000; }
   .pair { display: -webkit-box; display: -webkit-flex; display: flex; padding-bottom: 6px; }
   .pair > div { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; text-align: center; min-width: 0; }
   .pair .v { font-size: 20px; font-weight: 700; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -97,6 +97,23 @@
   .paused-banner { position: absolute; left: 0; right: 0; top: 34%; z-index: 5; text-align: center; font-size: 34px; font-weight: 800;
     background: rgba(255,194,75,.92); color: #000; padding: 8px 0; letter-spacing: 2px; }
   .toast { position: fixed; left: 12px; right: 12px; bottom: 16px; z-index: 50; background: #333; color: #fff; padding: 12px; border-radius: 10px; font-size: 15px; text-align: center; }
+
+  /* ---------- Tema claro (?light) ---------- */
+  body.light, body.light .screen { background: #fff; color: #000; }
+  body.light .card { background: #f1f1f4; }
+  body.light .wk { background: #e4e4ea; }
+  body.light .wk small { color: #555; }
+  body.light .wk.today { background: #fde3e6; }
+  body.light .card h2, body.light .lbl, body.light .step .rep, body.light .wk .when,
+  body.light .ghead .stats div:first-child { color: #7e22ce; }
+  body.light .sep { background: #16a34a; }
+  body.light .foot > div + div { border-left-color: #16a34a; }
+  body.light .bar { border-color: #222; background: #dcdce2; }
+  body.light .bar i { background: #fff; }
+  body.light button.sec { background: #dcdce2; color: #000; }
+  body.light input { background: #fff; color: #000; border-color: #bbb; }
+  body.light .tip, body.light label, body.light .dim { color: #666; }
+  body.light .ride-item { border-top-color: #ddd; }
 </style>
 </head>
 <body>
@@ -135,6 +152,15 @@
 <!-- ===================== AJUSTES ===================== -->
 <div id="cfg" class="view hidden">
   <div class="hdr"><h1>AJUSTES</h1><button class="sec" id="btnCfgBack">Voltar</button></div>
+
+  <div class="card">
+    <h2>Aparência</h2>
+    <div class="pair2" style="display:-webkit-box;display:-webkit-flex;display:flex">
+      <button id="thDark" style="margin-right:8px">Fundo preto</button>
+      <button id="thLight" class="sec">Fundo branco</button>
+    </div>
+    <div class="tip">Branco costuma ler melhor no sol forte; preto à noite.</div>
+  </div>
 
   <div class="card">
     <h2>Intervals.icu</h2>
@@ -268,7 +294,7 @@
 <script>
 (function () {
   'use strict';
-  var VERSION = 'v5';
+  var VERSION = 'v7';
   function $(id) { return document.getElementById(id); }
   function show(el, on) { (typeof el === 'string' ? $(el) : el).classList[on === false ? 'add' : 'remove']('hidden'); }
   function hide(el) { show(el, false); }
@@ -291,6 +317,8 @@
 
   // ---------- Modo demonstração (?demo): pedal simulado 20x mais rápido ----------
   var DEMO = /[?&]demo/.test(location.search);
+  // Tema claro (fundo branco, texto preto): escolhido em Ajustes (ou ?light no endereço)
+  var LIGHT = false;
   var K = DEMO ? 20 : 1, T0 = Date.now();
   function now() { return DEMO ? T0 + (Date.now() - T0) * K : Date.now(); }
 
@@ -307,6 +335,12 @@
   // Relê os ajustes salvos: se o login do Strava voltou noutra aba/janela do Bluefy,
   // a cópia em memória desta aba ficava velha ("Strava não conectado").
   function reloadCfg() { cfg = jget('cfg', {}); }
+  function applyTheme() {
+    LIGHT = cfg.theme === 'light' || /[?&]light/.test(location.search);
+    document.body.classList[LIGHT ? 'add' : 'remove']('light');
+    var bd = $('thDark'), bl = $('thLight');
+    if (bd) { bd.className = LIGHT ? 'sec' : ''; bl.className = LIGHT ? '' : 'sec'; }
+  }
   window.addEventListener('storage', function () { reloadCfg(); if (!$('home').classList.contains('hidden')) renderRides(); });
 
   // ---------- Zonas de FC (vêm do Intervals; padrão = bike atual) ----------
@@ -669,7 +703,7 @@
       if (s) { var frac = s.d ? (R.dist - R.sd0) / s.d : (R.moving - R.sm0) / s.t; done += s.ed * Math.min(1, frac); curEnd += s.ed; }
       var pc = function (m) { return (Math.min(m, tot) / tot * 100).toFixed(2) + '%'; };
       var h = '<div style="left:0;width:' + pc(done) + ';background:#2ee05a"></div>';
-      if (s) h += '<div style="left:' + pc(done) + ';width:' + pc(curEnd - done) + ';background:#f4f4f6"></div>';
+      if (s) h += '<div style="left:' + pc(done) + ';width:' + pc(curEnd - done) + ';background:' + (LIGHT ? '#555' : '#f4f4f6') + '"></div>';
       var acc = 0; R.steps.forEach(function (x, k) { if (k) h += '<i style="left:' + pc(acc) + '"></i>'; acc += x.ed; });
       $('bar').innerHTML = h;
       $('wk').textContent = fmt(R.dist / 1000, 1) + ' / ' + Math.round(tot / 1000) + ' km';
@@ -729,7 +763,7 @@
     }
     var st = R.steps[R.si];
     if (st && st.hr) {
-      c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 1; if (c.setLineDash) c.setLineDash([4, 4]);
+      c.strokeStyle = LIGHT ? 'rgba(0,0,0,.6)' : 'rgba(255,255,255,.7)'; c.lineWidth = 1; if (c.setLineDash) c.setLineDash([4, 4]);
       st.hr.forEach(function (bpm) { var y = Math.round(h - (bpm - lo) / (hi - lo) * h) + 0.5; c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); });
     }
   }
@@ -983,6 +1017,9 @@
         .catch(function (e) { $('iMsg').innerHTML = '<span class="bad">Chave não funcionou (' + e.message + ')</span>'; });
     }
   };
+  function setTheme(t) { reloadCfg(); cfg.theme = t; saveCfg(); applyTheme(); }
+  $('thDark').onclick = function () { setTheme('dark'); };
+  $('thLight').onclick = function () { setTheme('light'); };
   $('btnSTest').onclick = function () {
     reloadCfg();
     $('sState').textContent = 'Testando…';
@@ -1101,6 +1138,7 @@
   if (DEMO) window.__pd = { buildTcx: buildTcx, loadRide: loadRide, rides: function () { return jget('rides', []); } };
   loadDem();
   startGps();
+  applyTheme();
   goHome();
   handleStravaReturn();
   handleImport();
