@@ -14,26 +14,27 @@
   .ok { color: #3ddc84; } .bad { color: #ff5c6c; } .warn { color: #ffc24b; } .dim { color: #8a8a96; }
 
   /* ---------- Telas de menu ---------- */
-  .view { position: absolute; left: 0; right: 0; top: 0; bottom: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 12px 40px; }
+  /* Sem -webkit-overflow-scrolling:touch: no WebKit do iOS 12 ele pode deixar a tela sem responder a toques */
+  .view { position: absolute; left: 0; right: 0; top: 0; bottom: 0; overflow-y: auto; padding: 12px 12px 40px; }
   .hdr { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: center; -webkit-align-items: center; align-items: center; margin-bottom: 12px; }
   .hdr h1 { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; font-size: 22px; font-weight: 800; letter-spacing: 1px; }
   .hdr button { width: auto; margin: 0; padding: 8px 12px; font-size: 15px; }
   .card { background: #2a2a2e; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
-  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #8a8a96; margin-bottom: 8px; font-weight: 700; }
+  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #c084fc; margin-bottom: 8px; font-weight: 700; }
   .line { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: center; -webkit-align-items: center; align-items: center; padding: 4px 0; font-size: 16px; }
   .line > span:first-child { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; }
   .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; background: #555; }
   .dot.on { background: #3ddc84; } .dot.mid { background: #ffc24b; }
-  button { -webkit-appearance: none; appearance: none; border: 0; border-radius: 10px; background: #2f6bff; color: #fff; font-size: 17px; font-weight: 700; padding: 13px 14px; width: 100%; margin-top: 8px; font-family: inherit; }
+  button { -webkit-appearance: none; appearance: none; border: 0; border-radius: 10px; background: #e3263b; color: #fff; font-size: 17px; font-weight: 700; padding: 13px 14px; width: 100%; margin-top: 8px; font-family: inherit; }
   button.sec { background: #3a3a42; } button.danger { background: #6a1f2b; } button.sm { width: auto; padding: 7px 12px; font-size: 14px; margin: 0 0 0 8px; }
   button:active { opacity: .7; }
   input { width: 100%; font-size: 16px; padding: 11px; border-radius: 8px; border: 1px solid #444; background: #151518; color: #fff; margin-top: 6px; font-family: inherit; -webkit-user-select: text; user-select: text; }
   label { display: block; font-size: 13px; color: #8a8a96; margin-top: 10px; }
   .wk { background: #34343a; border-radius: 10px; padding: 11px 12px; margin-top: 8px; }
-  .wk.today { background: #183a7a; }
+  .wk.today { background: #5c1420; border: 1px solid #e3263b; }
   .wk b { display: block; font-size: 17px; margin-top: 2px; }
   .wk small { font-size: 13px; color: #b5b5c0; }
-  .wk .when { font-size: 12px; font-weight: 700; color: #9fb4ff; text-transform: uppercase; letter-spacing: .5px; }
+  .wk .when { font-size: 12px; font-weight: 700; color: #c084fc; text-transform: uppercase; letter-spacing: .5px; }
   .ride-item { border-top: 1px solid #3a3a42; padding: 10px 0; font-size: 15px; }
   .ride-item:first-of-type { border-top: 0; }
   .msg { font-size: 14px; margin-top: 8px; min-height: 18px; white-space: pre-line; }
@@ -44,13 +45,13 @@
   .screen { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: #1c1c1e; padding-bottom: 8px; overflow: hidden;
     display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-orient: vertical; -webkit-flex-direction: column; flex-direction: column; }
   .blk { position: relative; padding: 0 10px; }
-  .sep { height: 2px; background: #1f2a6e; margin: 0 10px; -webkit-flex-shrink: 0; flex-shrink: 0; }
-  .lbl { font-size: 13px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; color: #e8e8ea; }
+  .sep { height: 2px; background: #22c55e; margin: 0 10px; -webkit-flex-shrink: 0; flex-shrink: 0; }
+  .lbl { font-size: 13px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; color: #c084fc; }
   .num { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
   .u { font-size: 11px; font-weight: 700; line-height: 1; display: inline-block; text-align: center; vertical-align: top; margin: 5px 0 0 2px; }
   .top { -webkit-flex-shrink: 0; flex-shrink: 0; text-align: center; padding-top: 8px; }
   .step { font-size: 17px; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 40px; }
-  .step .rep { color: #9a9aa5; font-weight: 600; margin-left: 4px; }
+  .step .rep { color: #c084fc; font-weight: 600; margin-left: 4px; }
   .remain { font-size: 50px; line-height: 1.05; }
   .target { display: inline-block; margin-top: 2px; padding: 2px 10px; border-radius: 6px; font-size: 17px; font-weight: 700; color: #000; background: #d8d8dc; }
   .target.alert { -webkit-animation: blink 1s infinite; animation: blink 1s infinite; }
@@ -67,11 +68,12 @@
   .ghead .ico { width: 30px; }
   .ghead .big { font-size: 44px; width: 120px; }
   .ghead .stats { font-size: 15px; font-weight: 700; line-height: 1.15; display: -webkit-box; display: -webkit-flex; display: flex; }
+  .ghead .stats div:first-child { color: #c084fc; }
   .ghead .stats div + div { margin-left: 22px; text-align: right; min-width: 40px; }
   canvas { display: block; width: 100%; -webkit-box-flex: 1; -webkit-flex: 1 1 0; flex: 1 1 0; min-height: 0; }
   .foot { -webkit-flex-shrink: 0; flex-shrink: 0; display: -webkit-box; display: -webkit-flex; display: flex; padding: 5px 0 6px; }
   .foot > div { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; text-align: center; }
-  .foot > div + div { border-left: 2px solid #1f2a6e; }
+  .foot > div + div { border-left: 2px solid #22c55e; }
   .foot .v { font-size: 28px; }
   .rec { position: absolute; top: 9px; right: 10px; width: 10px; height: 10px; border-radius: 50%; background: #ff2d55; }
   .rec.paused { background: #ffc24b; }
@@ -84,14 +86,14 @@
     -webkit-box-pack: center; -webkit-justify-content: center; justify-content: center; text-align: center; }
   .ov h3 { font-size: 22px; margin-bottom: 6px; }
   .ov p { font-size: 15px; color: #c0c0cc; line-height: 1.4; }
-  .alert-ov { z-index: 20; background: #2f6bff; }
+  .alert-ov { z-index: 20; background: #e3263b; }
   .alert-ov .a1 { font-size: 20px; font-weight: 700; text-transform: uppercase; opacity: .9; }
   .alert-ov .a2 { font-size: 42px; font-weight: 800; line-height: 1.05; margin: 8px 0; text-transform: uppercase; word-wrap: break-word; }
   .alert-ov.eat .a2 { font-size: 64px; }
   .alert-ov .a3 { font-size: 30px; font-weight: 700; }
   .alert-ov.eat { background: #e07a00; }
   .alert-ov.done { background: #1f9d55; }
-  .alert-ov.warn { background: #b3261e; }
+  .alert-ov.warn { background: #7e22ce; }
   .paused-banner { position: absolute; left: 0; right: 0; top: 34%; z-index: 5; text-align: center; font-size: 34px; font-weight: 800;
     background: rgba(255,194,75,.92); color: #000; padding: 8px 0; letter-spacing: 2px; }
   .toast { position: fixed; left: 12px; right: 12px; bottom: 16px; z-index: 50; background: #333; color: #fff; padding: 12px; border-radius: 10px; font-size: 15px; text-align: center; }
@@ -254,12 +256,19 @@
   </div>
 </div>
 
+<!-- Confirmação própria (o confirm() do navegador pode travar a página no Bluefy em tela cheia) -->
+<div class="ov hidden" id="ovAsk" style="z-index:60">
+  <h3 id="askTxt"></h3>
+  <button id="askYes" class="danger" style="margin-top:18px">Sim</button>
+  <button id="askNo" class="sec">Cancelar</button>
+</div>
+
 <div class="toast hidden" id="toast"></div>
 
 <script>
 (function () {
   'use strict';
-  var VERSION = 'v4';
+  var VERSION = 'v5';
   function $(id) { return document.getElementById(id); }
   function show(el, on) { (typeof el === 'string' ? $(el) : el).classList[on === false ? 'add' : 'remove']('hidden'); }
   function hide(el) { show(el, false); }
@@ -270,6 +279,13 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
   var DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  // Pergunta sim/não dentro da página, sem o confirm() nativo
+  function ask(txt, yesTxt, onYes) {
+    $('askTxt').textContent = txt; $('askYes').textContent = yesTxt || 'Sim';
+    show('ovAsk');
+    $('askYes').onclick = function (e) { e.stopPropagation(); hide('ovAsk'); onYes(); };
+    $('askNo').onclick = function (e) { e.stopPropagation(); hide('ovAsk'); };
+  }
   var toastT = 0;
   function toast(t, sec) { var el = $('toast'); el.textContent = t; show(el); clearTimeout(toastT); toastT = setTimeout(function () { hide(el); }, (sec || 3) * 1000); }
 
@@ -750,13 +766,14 @@
   $('btnMenuHr').onclick = function (e) { e.stopPropagation(); hide('ovMenu'); connectHr(); };
   $('btnStartHr').onclick = function (e) { e.stopPropagation(); connectHr(); };
   $('btnEnd').onclick = function (e) {
-    e.stopPropagation();
-    if (!confirm('Encerrar e salvar o pedal?')) return;
-    R.on = false; R.status = 'done'; R.end = now(); saveRide(R, true);
-    var id = R.id; R = null;
-    goHome();
-    toast('Pedal salvo. Envie com Wi-Fi em “Sincronizar”.', 5);
-    if (navigator.onLine && !DEMO) uploadRide(id);
+    e.stopPropagation(); hide('ovMenu');
+    ask('Encerrar e salvar o pedal?', 'Encerrar e salvar', function () {
+      R.on = false; R.status = 'done'; R.end = now(); saveRide(R, true);
+      var id = R.id; R = null;
+      goHome();
+      toast('Pedal salvo. Envie com Wi-Fi em “Sincronizar”.', 5);
+      if (navigator.onLine && !DEMO) uploadRide(id);
+    });
   };
 
   // Tela apagou / saiu do app
@@ -926,8 +943,8 @@
     for (var i = 0; i < b.length; i++) b[i].onclick = function () {
       var id = this.getAttribute('data-del'), m = jget('r.' + id, null);
       var sent = m && m.up.i && (m.up.s || !cfg.srt);
-      if (!confirm(sent ? 'Apagar este pedal do celular? (já foi enviado)' : 'ATENÇÃO: este pedal ainda NÃO foi enviado. Apagar mesmo assim?')) return;
-      deleteRide(id); renderRides();
+      ask(sent ? 'Apagar este pedal do celular? (já foi enviado)' : 'ATENÇÃO: este pedal ainda NÃO foi enviado. Apagar mesmo assim?', 'Apagar',
+        function () { deleteRide(id); renderRides(); });
     };
     if (active) {
       show('resumeCard');
